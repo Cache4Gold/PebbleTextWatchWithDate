@@ -1,5 +1,6 @@
 #include <pebble.h>
 #include <ctype.h>
+#include <stdbool.h>
 #include "num2words-en.h"
 
 // -------------------------------------------------------------------------

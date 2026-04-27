@@ -89,6 +89,12 @@ static int minutes_to_lines(int minutes, char *line2, char *line3,
       strncpy(line3, ONES[ones_val], length - 1);
       return 2;
     } else if (prefix == PREFIX_O) {
+      // On narrow screens, split long words: "o'" on line2, word on line3
+      if (split_long_words && strlen(ONES[ones_val]) >= 5) {
+        strncpy(line2, "o'", length - 1);
+        strncpy(line3, ONES[ones_val], length - 1);
+        return 2;
+      }
       snprintf(line2, length, "o' %s", ONES[ones_val]);
       return 1;
     } else {

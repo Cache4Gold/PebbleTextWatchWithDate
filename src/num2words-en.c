@@ -19,7 +19,7 @@ static const char* const TENS[] = {
 // Roots for splitting teens on narrow screens: ones_val index matches TEENS
 // e.g. ones_val=8 -> "eighteen" -> root "eigh" + "teen"
 static const char* const TEEN_ROOTS[] = {
-  "ten","elev","twelve","thir","four","fif","six","seven","eigh","nine"
+  "ten","elev","twelve","thir","four","fif","six","seven","eight","nine"
 };
 
 static void hour_to_line(int hours, char *line1, size_t length) {
@@ -72,8 +72,8 @@ static int minutes_to_lines(int minutes, char *line2, char *line3,
     // Candidates: thirteen(8), fourteen(8), fifteen(7), sixteen(7),
     //             seventeen(9), eighteen(8), nineteen(8)
     // Skip: ten(3), eleven(6), twelve(6) - short enough or irregular
-    // Split long teens except thirteen (ones_val=3) which fits on one line
-    if (split_long_words && ones_val >= 3 && ones_val != 3 && strlen(TEENS[ones_val]) > 6) {
+    // Split only the longest teens: fourteen(4), seventeen(7), eighteen(8), nineteen(9)
+    if (split_long_words && (ones_val == 4 || ones_val == 7 || ones_val == 8 || ones_val == 9)) {
       strncpy(line2, TEEN_ROOTS[ones_val], length - 1);
       strncpy(line3, "teen", length - 1);
       return 2;

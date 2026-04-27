@@ -201,6 +201,17 @@ static void prv_animation_stopped(struct Animation *animation, bool finished, vo
   GRect rect = layer_get_frame(current);
   rect.origin.x = s_screen_w;
   layer_set_frame(current, rect);
+  // NULL out the pointer on whichever line owns this animation so
+  // prv_destroy_property_animation does not try to unschedule it again
+  Line *lines[] = {&s_line1, &s_line2, &s_line3};
+  for (int i = 0; i < 3; i++) {
+    if ((Animation*)lines[i]->currentAnimation == animation) {
+      lines[i]->currentAnimation = NULL;
+    }
+    if ((Animation*)lines[i]->nextAnimation == animation) {
+      lines[i]->nextAnimation = NULL;
+    }
+  }
 }
 
 static void prv_animate_line(Line *line, TextLayer *current, TextLayer *next) {
@@ -265,30 +276,30 @@ static void prv_set_date(struct tm *tm) {
 
   switch (s_settings.date_format) {
     case DATE_FORMAT_LONG: {
-      // "september 25th, 2024"
-      const char *suffix;
       int day = tm->tm_mday;
-      if (day == 1 || day == 21 || day == 31)      suffix = "%est, %Y";
-      else if (day == 2 || day == 22)               suffix = "%end, %Y";
-      else if (day == 3 || day == 23)               suffix = "%erd, %Y";
-      else                                          suffix = "%eth, %Y";
-      char fmt[32];
-      snprintf(fmt, sizeof(fmt), "%%B %%%s", suffix);
-      strftime(date_str, sizeof(date_str), fmt, tm);
+      const char *suffix;
+      if (day == 1 || day == 21 || day == 31)      suffix = "st";
+      else if (day == 2 || day == 22)               suffix = "nd";
+      else if (day == 3 || day == 23)               suffix = "rd";
+      else                                          suffix = "th";
+      char month_str[16];
+      strftime(month_str, sizeof(month_str), "%B", tm);
+      char year_str[8];
+      strftime(year_str, sizeof(year_str), "%Y", tm);
+      snprintf(date_str, sizeof(date_str), "%s %d%s, %s", month_str, day, suffix, year_str);
       strftime(day_str, sizeof(day_str), "%A", tm);
       break;
     }
     case DATE_FORMAT_SHORT: {
-      // "sep 25th"
-      const char *suffix;
       int day = tm->tm_mday;
-      if (day == 1 || day == 21 || day == 31)      suffix = "%est";
-      else if (day == 2 || day == 22)               suffix = "%end";
-      else if (day == 3 || day == 23)               suffix = "%erd";
-      else                                          suffix = "%eth";
-      char fmt[32];
-      snprintf(fmt, sizeof(fmt), "%%b %%%s", suffix);
-      strftime(date_str, sizeof(date_str), fmt, tm);
+      const char *suffix;
+      if (day == 1 || day == 21 || day == 31)      suffix = "st";
+      else if (day == 2 || day == 22)               suffix = "nd";
+      else if (day == 3 || day == 23)               suffix = "rd";
+      else                                          suffix = "th";
+      char month_str[8];
+      strftime(month_str, sizeof(month_str), "%b", tm);
+      snprintf(date_str, sizeof(date_str), "%s %d%s", month_str, day, suffix);
       strftime(day_str, sizeof(day_str), "%a", tm);
       break;
     }

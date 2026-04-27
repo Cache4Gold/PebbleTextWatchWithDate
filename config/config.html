@@ -528,15 +528,9 @@
 
     const encoded = encodeURIComponent(JSON.stringify(payload));
 
-    if (typeof Pebble !== 'undefined') {
-      // Running inside Pebble app — close and return payload via location.href
-      // The pkjs webviewclosed handler picks this up from e.response
-      Pebble.closeConfiguration();
-      location.href = 'pebblejs://close#' + encoded;
-    } else {
-      // Dev/browser preview mode
-      alert('Payload (dev preview):\n' + JSON.stringify(payload, null, 2));
-    }
+    // Always use pebblejs://close# — works inside Pebble app webview.
+    // In a regular browser this just navigates away, which is fine.
+    location.href = 'pebblejs://close#' + encoded;
   }
 
   initUI();

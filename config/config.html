@@ -53,11 +53,11 @@
   <div class="card">
     <div class="row"><label>Typeface</label>
       <select id="font-choice">
-        <option value="0">Bitham 42 (classic)</option>
-        <option value="1">Roboto 49 (modern)</option>
-        <option value="2">Bitham 34 (medium)</option>
-        <option value="3">Gothic 24 (compact)</option>
-        <option value="4">Bitham 30 (black)</option>
+        <option value="0">Bitham 42 Bold/Light (classic)</option>
+        <option value="1">Bitham 30 Black (chunky)</option>
+        <option value="2">Gothic 28 Bold</option>
+        <option value="3">Gothic 28 Regular</option>
+        <option value="4">Droid Serif 28 Bold</option>
       </select>
     </div>
   </div>
@@ -131,22 +131,35 @@
 <script>
 // Correct Pebble 64-color palette: 0b11RRGGBB, R/G/B each 0-3 (0=0x00,1=0x55,2=0xAA,3=0xFF)
 const PALETTE = [
-  ["#000000",0xC0],["#000055",0xC1],["#0000AA",0xC2],["#0000FF",0xC3],
-  ["#005500",0xC4],["#005555",0xC5],["#0055AA",0xC6],["#0055FF",0xC7],
-  ["#00AA00",0xC8],["#00AA55",0xC9],["#00AAAA",0xCA],["#00AAFF",0xCB],
-  ["#00FF00",0xCC],["#00FF55",0xCD],["#00FFAA",0xCE],["#00FFFF",0xCF],
-  ["#550000",0xD0],["#550055",0xD1],["#5500AA",0xD2],["#5500FF",0xD3],
-  ["#555500",0xD4],["#555555",0xD5],["#5555AA",0xD6],["#5555FF",0xD7],
-  ["#55AA00",0xD8],["#55AA55",0xD9],["#55AAAA",0xDA],["#55AAFF",0xDB],
-  ["#55FF00",0xDC],["#55FF55",0xDD],["#55FFAA",0xDE],["#55FFFF",0xDF],
-  ["#AA0000",0xE0],["#AA0055",0xE1],["#AA00AA",0xE2],["#AA00FF",0xE3],
-  ["#AA5500",0xE4],["#AA5555",0xE5],["#AA55AA",0xE6],["#AA55FF",0xE7],
-  ["#AAAA00",0xE8],["#AAAA55",0xE9],["#AAAAAA",0xEA],["#AAAAFF",0xEB],
-  ["#AAFF00",0xEC],["#AAFF55",0xED],["#AAFFAA",0xEE],["#AAFFFF",0xEF],
-  ["#FF0000",0xF0],["#FF0055",0xF1],["#FF00AA",0xF2],["#FF00FF",0xF3],
-  ["#FF5500",0xF4],["#FF5555",0xF5],["#FF55AA",0xF6],["#FF55FF",0xF7],
-  ["#FFAA00",0xF8],["#FFAA55",0xF9],["#FFAAAA",0xFA],["#FFAAFF",0xFB],
-  ["#FFFF00",0xFC],["#FFFF55",0xFD],["#FFFFAA",0xFE],["#FFFFFF",0xFF]
+  // Grayscale
+  ["#000000",0xC0],["#555555",0xD5],["#AAAAAA",0xEA],["#FFFFFF",0xFF],
+  // Near-white tints
+  ["#FFAAAA",0xFA],["#AAFFAA",0xEE],["#AAAAFF",0xEB],["#FFFFAA",0xFE],
+  // Reds
+  ["#550000",0xD0],["#AA0000",0xE0],["#FF0000",0xF0],["#FF5555",0xF5],
+  // Oranges / browns
+  ["#AA5500",0xE4],["#FF5500",0xF4],["#FFAA00",0xF8],["#FFAA55",0xF9],
+  // Yellows
+  ["#555500",0xD4],["#AAAA00",0xE8],["#FFFF00",0xFC],["#FFFF55",0xFD],
+  // Yellow-greens
+  ["#55AA00",0xD8],["#AAFF00",0xEC],["#55FF00",0xDC],["#AAFF55",0xED],
+  // Greens
+  ["#005500",0xC4],["#00AA00",0xC8],["#00FF00",0xCC],["#55FF55",0xDD],
+  // Teals / cyans
+  ["#005555",0xC5],["#00AA55",0xC9],["#00FF55",0xCD],["#00FFAA",0xCE],
+  ["#00AAAA",0xCA],["#00FFFF",0xCF],["#55FFAA",0xDE],["#55FFFF",0xDF],
+  // Light blues
+  ["#0055AA",0xC6],["#00AAFF",0xCB],["#55AAFF",0xDB],["#AAFFFF",0xEF],
+  // Blues
+  ["#000055",0xC1],["#0000AA",0xC2],["#0000FF",0xC3],["#5555FF",0xD7],
+  ["#0055FF",0xC7],["#5500FF",0xD3],["#AA00FF",0xE3],["#AAAAFF",0xEB],
+  // Purples / magentas
+  ["#550055",0xD1],["#AA00AA",0xE2],["#FF00FF",0xF3],["#FF55FF",0xF7],
+  // Pinks / hot pinks
+  ["#AA0055",0xE1],["#FF0055",0xF1],["#FF55AA",0xF6],["#FF00AA",0xF2],
+  // Remaining mixed
+  ["#5500AA",0xD2],["#AA55AA",0xE6],["#AA55FF",0xE7],["#FFAAFF",0xFB],
+  ["#5555AA",0xD6],["#55AA55",0xD9],["#55AAAA",0xDA],["#AAFFAA",0xEE],
 ];
 
 function argbToHex(argb) {

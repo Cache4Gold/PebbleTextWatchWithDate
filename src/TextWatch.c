@@ -70,11 +70,11 @@ typedef enum {
 } DayFormat;
 
 typedef enum {
-  FONT_BITHAM_42  = 0,
-  FONT_ROBOTO_49  = 1,
-  FONT_BITHAM_34  = 2,
-  FONT_GOTHIC_24  = 3,
-  FONT_BITHAM_30  = 4,
+  FONT_BITHAM_42_BOLDLIGHT = 0,  // Bold hour, Light minutes
+  FONT_BITHAM_30_BLACK     = 1,  // Bitham 30 Black (chunky)
+  FONT_GOTHIC_28_BOLD      = 2,  // Gothic 28 Bold
+  FONT_GOTHIC_28           = 3,  // Gothic 28 Regular
+  FONT_DROID_SERIF_28      = 4,  // Droid Serif 28 Bold
 } FontChoice;
 
 typedef enum {
@@ -217,31 +217,31 @@ static void prv_save_settings(void) {
 // -------------------------------------------------------------------------
 static GFont prv_get_font_bold(void) {
   switch (s_settings.font_choice) {
-    case FONT_ROBOTO_49: return fonts_get_system_font(FONT_KEY_ROBOTO_BOLD_SUBSET_49);
-    case FONT_BITHAM_34: return fonts_get_system_font(FONT_KEY_BITHAM_34_MEDIUM_NUMBERS);
-    case FONT_GOTHIC_24: return fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD);
-    case FONT_BITHAM_30: return fonts_get_system_font(FONT_KEY_BITHAM_30_BLACK);
-    default:             return fonts_get_system_font(FONT_KEY_BITHAM_42_BOLD);
+    case FONT_BITHAM_30_BLACK:  return fonts_get_system_font(FONT_KEY_BITHAM_30_BLACK);
+    case FONT_GOTHIC_28_BOLD:   return fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD);
+    case FONT_GOTHIC_28:        return fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD);
+    case FONT_DROID_SERIF_28:   return fonts_get_system_font(FONT_KEY_DROID_SERIF_28_BOLD);
+    default:                    return fonts_get_system_font(FONT_KEY_BITHAM_42_BOLD);
   }
 }
 
 static GFont prv_get_font_light(void) {
   switch (s_settings.font_choice) {
-    case FONT_ROBOTO_49: return fonts_get_system_font(FONT_KEY_ROBOTO_BOLD_SUBSET_49);
-    case FONT_BITHAM_34: return fonts_get_system_font(FONT_KEY_BITHAM_34_MEDIUM_NUMBERS);
-    case FONT_GOTHIC_24: return fonts_get_system_font(FONT_KEY_GOTHIC_24);
-    case FONT_BITHAM_30: return fonts_get_system_font(FONT_KEY_BITHAM_30_BLACK);
-    default:             return fonts_get_system_font(FONT_KEY_BITHAM_42_LIGHT);
+    case FONT_BITHAM_30_BLACK:  return fonts_get_system_font(FONT_KEY_BITHAM_30_BLACK);
+    case FONT_GOTHIC_28_BOLD:   return fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD);
+    case FONT_GOTHIC_28:        return fonts_get_system_font(FONT_KEY_GOTHIC_28);
+    case FONT_DROID_SERIF_28:   return fonts_get_system_font(FONT_KEY_DROID_SERIF_28_BOLD);
+    default:                    return fonts_get_system_font(FONT_KEY_BITHAM_42_LIGHT);
   }
 }
 
 static int prv_line_height(void) {
   switch (s_settings.font_choice) {
-    case FONT_ROBOTO_49: return 52;
-    case FONT_BITHAM_34: return 38;
-    case FONT_GOTHIC_24: return 30;
-    case FONT_BITHAM_30: return 34;
-    default:             return 50;
+    case FONT_BITHAM_30_BLACK: return 36;
+    case FONT_GOTHIC_28_BOLD:  return 34;
+    case FONT_GOTHIC_28:       return 34;
+    case FONT_DROID_SERIF_28:  return 34;
+    default:                   return 50; // Bitham 42
   }
 }
 

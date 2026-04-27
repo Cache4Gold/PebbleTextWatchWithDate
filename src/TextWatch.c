@@ -4,44 +4,56 @@
 #include "num2words-en.h"
 
 // -------------------------------------------------------------------------
-// Persistent storage keys
+// Persist keys
 // -------------------------------------------------------------------------
 #define PERSIST_KEY_BG_COLOR        1
-#define PERSIST_KEY_TIME_COLOR      2
-#define PERSIST_KEY_DATE_COLOR      3
-#define PERSIST_KEY_DAY_COLOR       4
+#define PERSIST_KEY_TIME_COLOR      2  // unused, kept for legacy compat
+#define PERSIST_KEY_DATE_COLOR      3  // slot2 color
+#define PERSIST_KEY_DAY_COLOR       4  // slot1 color
 #define PERSIST_KEY_TIME_ALIGN      5
-#define PERSIST_KEY_DATE_ALIGN      6
+#define PERSIST_KEY_DATE_ALIGN      6  // slot alignment (both)
 #define PERSIST_KEY_PREFIX          7
-#define PERSIST_KEY_DATE_FORMAT     8
-#define PERSIST_KEY_FONT_CHOICE     9
+#define PERSIST_KEY_DATE_FORMAT     8  // unused directly now
+#define PERSIST_KEY_FONT_CHOICE     9  // unused, kept for compat
 #define PERSIST_KEY_HOUR_COLOR      10
 #define PERSIST_KEY_MIN_COLOR       11
-#define PERSIST_KEY_DAY_FORMAT      12
-#define PERSIST_KEY_TIME_CASE       13
-#define PERSIST_KEY_DATE_CASE       14
-#define PERSIST_KEY_DAY_CASE        15
+#define PERSIST_KEY_DAY_FORMAT      12 // slot1 content
+#define PERSIST_KEY_TIME_CASE       13 // unused
+#define PERSIST_KEY_DATE_CASE       14 // slot2 case
+#define PERSIST_KEY_DAY_CASE        15 // slot1 case
 #define PERSIST_KEY_HOUR_CASE       16
 #define PERSIST_KEY_MIN_CASE        17
+#define PERSIST_KEY_SLOT1_CONTENT   18
+#define PERSIST_KEY_SLOT2_CONTENT   19
+#define PERSIST_KEY_SLOT1_COLOR     20
+#define PERSIST_KEY_SLOT2_COLOR     21
+#define PERSIST_KEY_SLOT1_ALIGN     22
+#define PERSIST_KEY_SLOT2_ALIGN     23
+#define PERSIST_KEY_SLOT1_CASE      24
+#define PERSIST_KEY_SLOT2_CASE      25
+#define PERSIST_KEY_WEATHER_UNIT    26
+#define PERSIST_KEY_WEATHER_TEMP    27
+#define PERSIST_KEY_WEATHER_COND    28
 
 // AppMessage keys
 #define MSG_KEY_BG_COLOR            1
-#define MSG_KEY_TIME_COLOR          2
-#define MSG_KEY_DATE_COLOR          3
-#define MSG_KEY_DAY_COLOR           4
-#define MSG_KEY_TIME_ALIGN          5
-#define MSG_KEY_DATE_ALIGN          6
-#define MSG_KEY_PREFIX              7
-#define MSG_KEY_DATE_FORMAT         8
-#define MSG_KEY_FONT_CHOICE         9
 #define MSG_KEY_HOUR_COLOR          10
 #define MSG_KEY_MIN_COLOR           11
-#define MSG_KEY_DAY_FORMAT          12
-#define MSG_KEY_TIME_CASE           13
-#define MSG_KEY_DATE_CASE           14
-#define MSG_KEY_DAY_CASE            15
+#define MSG_KEY_TIME_ALIGN          5
+#define MSG_KEY_PREFIX              7
 #define MSG_KEY_HOUR_CASE           16
 #define MSG_KEY_MIN_CASE            17
+#define MSG_KEY_SLOT1_CONTENT       18
+#define MSG_KEY_SLOT2_CONTENT       19
+#define MSG_KEY_SLOT1_COLOR         20
+#define MSG_KEY_SLOT2_COLOR         21
+#define MSG_KEY_SLOT1_ALIGN         22
+#define MSG_KEY_SLOT2_ALIGN         23
+#define MSG_KEY_SLOT1_CASE          24
+#define MSG_KEY_SLOT2_CASE          25
+#define MSG_KEY_WEATHER_UNIT        26
+#define MSG_KEY_WEATHER_TEMP        27
+#define MSG_KEY_WEATHER_COND        28
 
 // -------------------------------------------------------------------------
 // Enums
@@ -53,31 +65,34 @@ typedef enum {
 } AlignOption;
 
 typedef enum {
-  DATE_FORMAT_LONG_US   = 0,  // monday / april 27th, 2026
-  DATE_FORMAT_SHORT_US  = 1,  // mon / apr 27th
-  DATE_FORMAT_LONG_EU   = 2,  // monday / 27th april 2026
-  DATE_FORMAT_SHORT_EU  = 3,  // mon / 27th apr
-  DATE_FORMAT_NUM_MDY   = 4,  // 4/27/2026
-  DATE_FORMAT_NUM_DMY   = 5,  // 27/4/2026
-  DATE_FORMAT_NUM_YMD   = 6,  // 2026/4/27
-  DATE_FORMAT_NONE      = 7,  // hidden
-  DATE_FORMAT_DAY_ONLY  = 8,  // numeric day only (27)
-} DateFormat;
-
-typedef enum {
-  DAY_FORMAT_LONG  = 0,  // monday
-  DAY_FORMAT_SHORT = 1,  // mon
-  DAY_FORMAT_NONE  = 2,  // hidden
-} DayFormat;
-
-// Font is fixed as Bitham 42 Bold/Light
-// (other fonts removed as they lack the bold/light distinction)
-
-typedef enum {
   CASE_LOWER  = 0,
   CASE_UPPER  = 1,
   CASE_PROPER = 2,
 } CaseOption;
+
+// Slot content options
+typedef enum {
+  SLOT_HIDDEN          = 0,
+  SLOT_DAY_LONG        = 1,
+  SLOT_DAY_SHORT       = 2,
+  SLOT_DATE_LONG_US    = 3,
+  SLOT_DATE_SHORT_US   = 4,
+  SLOT_DATE_LONG_EU    = 5,
+  SLOT_DATE_SHORT_EU   = 6,
+  SLOT_DATE_NUM_MDY    = 7,
+  SLOT_DATE_NUM_DMY    = 8,
+  SLOT_DATE_NUM_YMD    = 9,
+  SLOT_DATE_DAY_NUM    = 10,
+  SLOT_WEATHER_TEMP    = 11,
+  SLOT_WEATHER_COND    = 12,
+  SLOT_WEATHER_TEMP_COND = 13,
+  SLOT_WEATHER_COND_TEMP = 14,
+} SlotContent;
+
+typedef enum {
+  UNIT_F = 0,
+  UNIT_C = 1,
+} WeatherUnit;
 
 // -------------------------------------------------------------------------
 // Settings struct
@@ -86,18 +101,22 @@ typedef struct {
   GColor      bg_color;
   GColor      hour_color;
   GColor      min_color;
-  GColor      date_color;
-  GColor      day_color;
   AlignOption time_align;
-  AlignOption date_align;
   MinutePrefix prefix;
-  DateFormat  date_format;
-  DayFormat   day_format;
-  CaseOption  time_case;
   CaseOption  hour_case;
   CaseOption  min_case;
-  CaseOption  date_case;
-  CaseOption  day_case;
+  // Slot 1 (top info line)
+  SlotContent slot1_content;
+  GColor      slot1_color;
+  AlignOption slot1_align;
+  CaseOption  slot1_case;
+  // Slot 2 (bottom info line)
+  SlotContent slot2_content;
+  GColor      slot2_color;
+  AlignOption slot2_align;
+  CaseOption  slot2_case;
+  // Weather
+  WeatherUnit weather_unit;
 } Settings;
 
 // -------------------------------------------------------------------------
@@ -116,8 +135,8 @@ typedef struct {
 } Line;
 
 static Line s_line1, s_line2, s_line3;
-static TextLayer *s_date_layer;
-static TextLayer *s_day_layer;
+static TextLayer *s_slot1_layer;
+static TextLayer *s_slot2_layer;
 
 static char s_line1Str[2][BUFFER_SIZE];
 static char s_line2Str[2][BUFFER_SIZE];
@@ -125,6 +144,10 @@ static char s_line3Str[2][BUFFER_SIZE];
 
 static int s_screen_w;
 static int s_screen_h;
+
+// Weather data (received from phone)
+static int   s_weather_temp = 9999;   // 9999 = not loaded
+static char  s_weather_cond[32] = "";
 
 // -------------------------------------------------------------------------
 // Case transformation
@@ -158,51 +181,61 @@ static void prv_load_settings(void) {
   s_settings.min_color   = persist_exists(PERSIST_KEY_MIN_COLOR)
                            ? (GColor){ .argb = persist_read_int(PERSIST_KEY_MIN_COLOR) }
                            : GColorWhite;
-  s_settings.date_color  = persist_exists(PERSIST_KEY_DATE_COLOR)
-                           ? (GColor){ .argb = persist_read_int(PERSIST_KEY_DATE_COLOR) }
-                           : GColorWhite;
-  s_settings.day_color   = persist_exists(PERSIST_KEY_DAY_COLOR)
-                           ? (GColor){ .argb = persist_read_int(PERSIST_KEY_DAY_COLOR) }
-                           : GColorWhite;
   s_settings.time_align  = persist_exists(PERSIST_KEY_TIME_ALIGN)
                            ? persist_read_int(PERSIST_KEY_TIME_ALIGN) : ALIGN_LEFT;
-  s_settings.date_align  = persist_exists(PERSIST_KEY_DATE_ALIGN)
-                           ? persist_read_int(PERSIST_KEY_DATE_ALIGN) : ALIGN_RIGHT;
   s_settings.prefix      = persist_exists(PERSIST_KEY_PREFIX)
                            ? persist_read_int(PERSIST_KEY_PREFIX) : PREFIX_NONE;
-  s_settings.date_format = persist_exists(PERSIST_KEY_DATE_FORMAT)
-                           ? persist_read_int(PERSIST_KEY_DATE_FORMAT) : DATE_FORMAT_LONG_US;
-  s_settings.day_format  = persist_exists(PERSIST_KEY_DAY_FORMAT)
-                           ? persist_read_int(PERSIST_KEY_DAY_FORMAT) : DAY_FORMAT_LONG;
-
-  s_settings.time_case   = persist_exists(PERSIST_KEY_TIME_CASE)
-                           ? persist_read_int(PERSIST_KEY_TIME_CASE) : CASE_LOWER;
   s_settings.hour_case   = persist_exists(PERSIST_KEY_HOUR_CASE)
                            ? persist_read_int(PERSIST_KEY_HOUR_CASE) : CASE_LOWER;
   s_settings.min_case    = persist_exists(PERSIST_KEY_MIN_CASE)
                            ? persist_read_int(PERSIST_KEY_MIN_CASE) : CASE_LOWER;
-  s_settings.date_case   = persist_exists(PERSIST_KEY_DATE_CASE)
-                           ? persist_read_int(PERSIST_KEY_DATE_CASE) : CASE_LOWER;
-  s_settings.day_case    = persist_exists(PERSIST_KEY_DAY_CASE)
-                           ? persist_read_int(PERSIST_KEY_DAY_CASE) : CASE_LOWER;
+  s_settings.slot1_content = persist_exists(PERSIST_KEY_SLOT1_CONTENT)
+                           ? persist_read_int(PERSIST_KEY_SLOT1_CONTENT) : SLOT_DAY_LONG;
+  s_settings.slot1_color = persist_exists(PERSIST_KEY_SLOT1_COLOR)
+                           ? (GColor){ .argb = persist_read_int(PERSIST_KEY_SLOT1_COLOR) }
+                           : GColorWhite;
+  s_settings.slot1_align = persist_exists(PERSIST_KEY_SLOT1_ALIGN)
+                           ? persist_read_int(PERSIST_KEY_SLOT1_ALIGN) : ALIGN_RIGHT;
+  s_settings.slot1_case  = persist_exists(PERSIST_KEY_SLOT1_CASE)
+                           ? persist_read_int(PERSIST_KEY_SLOT1_CASE) : CASE_LOWER;
+  s_settings.slot2_content = persist_exists(PERSIST_KEY_SLOT2_CONTENT)
+                           ? persist_read_int(PERSIST_KEY_SLOT2_CONTENT) : SLOT_DATE_LONG_US;
+  s_settings.slot2_color = persist_exists(PERSIST_KEY_SLOT2_COLOR)
+                           ? (GColor){ .argb = persist_read_int(PERSIST_KEY_SLOT2_COLOR) }
+                           : GColorWhite;
+  s_settings.slot2_align = persist_exists(PERSIST_KEY_SLOT2_ALIGN)
+                           ? persist_read_int(PERSIST_KEY_SLOT2_ALIGN) : ALIGN_RIGHT;
+  s_settings.slot2_case  = persist_exists(PERSIST_KEY_SLOT2_CASE)
+                           ? persist_read_int(PERSIST_KEY_SLOT2_CASE) : CASE_LOWER;
+  s_settings.weather_unit = persist_exists(PERSIST_KEY_WEATHER_UNIT)
+                           ? persist_read_int(PERSIST_KEY_WEATHER_UNIT) : UNIT_F;
+
+  // Restore cached weather
+  if (persist_exists(PERSIST_KEY_WEATHER_TEMP)) {
+    s_weather_temp = persist_read_int(PERSIST_KEY_WEATHER_TEMP);
+  }
+  if (persist_exists(PERSIST_KEY_WEATHER_COND)) {
+    persist_read_string(PERSIST_KEY_WEATHER_COND, s_weather_cond, sizeof(s_weather_cond));
+  }
 }
 
 static void prv_save_settings(void) {
-  persist_write_int(PERSIST_KEY_BG_COLOR,    s_settings.bg_color.argb);
-  persist_write_int(PERSIST_KEY_HOUR_COLOR,  s_settings.hour_color.argb);
-  persist_write_int(PERSIST_KEY_MIN_COLOR,   s_settings.min_color.argb);
-  persist_write_int(PERSIST_KEY_DATE_COLOR,  s_settings.date_color.argb);
-  persist_write_int(PERSIST_KEY_DAY_COLOR,   s_settings.day_color.argb);
-  persist_write_int(PERSIST_KEY_TIME_ALIGN,  s_settings.time_align);
-  persist_write_int(PERSIST_KEY_DATE_ALIGN,  s_settings.date_align);
-  persist_write_int(PERSIST_KEY_PREFIX,      s_settings.prefix);
-  persist_write_int(PERSIST_KEY_DATE_FORMAT, s_settings.date_format);
-  persist_write_int(PERSIST_KEY_DAY_FORMAT,  s_settings.day_format);
-  persist_write_int(PERSIST_KEY_TIME_CASE,   s_settings.time_case);
-  persist_write_int(PERSIST_KEY_HOUR_CASE,   s_settings.hour_case);
-  persist_write_int(PERSIST_KEY_MIN_CASE,    s_settings.min_case);
-  persist_write_int(PERSIST_KEY_DATE_CASE,   s_settings.date_case);
-  persist_write_int(PERSIST_KEY_DAY_CASE,    s_settings.day_case);
+  persist_write_int(PERSIST_KEY_BG_COLOR,      s_settings.bg_color.argb);
+  persist_write_int(PERSIST_KEY_HOUR_COLOR,    s_settings.hour_color.argb);
+  persist_write_int(PERSIST_KEY_MIN_COLOR,     s_settings.min_color.argb);
+  persist_write_int(PERSIST_KEY_TIME_ALIGN,    s_settings.time_align);
+  persist_write_int(PERSIST_KEY_PREFIX,        s_settings.prefix);
+  persist_write_int(PERSIST_KEY_HOUR_CASE,     s_settings.hour_case);
+  persist_write_int(PERSIST_KEY_MIN_CASE,      s_settings.min_case);
+  persist_write_int(PERSIST_KEY_SLOT1_CONTENT, s_settings.slot1_content);
+  persist_write_int(PERSIST_KEY_SLOT1_COLOR,   s_settings.slot1_color.argb);
+  persist_write_int(PERSIST_KEY_SLOT1_ALIGN,   s_settings.slot1_align);
+  persist_write_int(PERSIST_KEY_SLOT1_CASE,    s_settings.slot1_case);
+  persist_write_int(PERSIST_KEY_SLOT2_CONTENT, s_settings.slot2_content);
+  persist_write_int(PERSIST_KEY_SLOT2_COLOR,   s_settings.slot2_color.argb);
+  persist_write_int(PERSIST_KEY_SLOT2_ALIGN,   s_settings.slot2_align);
+  persist_write_int(PERSIST_KEY_SLOT2_CASE,    s_settings.slot2_case);
+  persist_write_int(PERSIST_KEY_WEATHER_UNIT,  s_settings.weather_unit);
 }
 
 // -------------------------------------------------------------------------
@@ -217,18 +250,106 @@ static GFont prv_get_font_light(void) {
 }
 
 static int prv_line_height(void) {
-  return 50; // Bitham 42
+  return 50;
 }
 
-// -------------------------------------------------------------------------
-// Alignment helper
-// -------------------------------------------------------------------------
 static GTextAlignment prv_galign(AlignOption a) {
   switch (a) {
     case ALIGN_CENTER: return GTextAlignmentCenter;
     case ALIGN_RIGHT:  return GTextAlignmentRight;
     default:           return GTextAlignmentLeft;
   }
+}
+
+// -------------------------------------------------------------------------
+// Slot content builder
+// -------------------------------------------------------------------------
+static void prv_build_slot_text(SlotContent content, struct tm *tm, char *buf, size_t len) {
+  memset(buf, 0, len);
+
+  int day = tm->tm_mday;
+  const char *suffix;
+  if (day == 1 || day == 21 || day == 31)    suffix = "st";
+  else if (day == 2 || day == 22)             suffix = "nd";
+  else if (day == 3 || day == 23)             suffix = "rd";
+  else                                        suffix = "th";
+
+  char month_long[16], month_short[8], year_str[8];
+  strftime(month_long,  sizeof(month_long),  "%B", tm);
+  strftime(month_short, sizeof(month_short), "%b", tm);
+  strftime(year_str,    sizeof(year_str),    "%Y", tm);
+
+  bool have_weather = (s_weather_temp != 9999);
+  const char *unit_str = (s_settings.weather_unit == UNIT_C) ? "c" : "f";
+  char temp_str[16] = "--";
+  if (have_weather) {
+    snprintf(temp_str, sizeof(temp_str), "%d°%s", s_weather_temp, unit_str);
+  }
+
+  switch (content) {
+    case SLOT_HIDDEN:
+      break;
+    case SLOT_DAY_LONG:
+      strftime(buf, len, "%A", tm);
+      break;
+    case SLOT_DAY_SHORT:
+      strftime(buf, len, "%a", tm);
+      break;
+    case SLOT_DATE_LONG_US:
+      snprintf(buf, len, "%s %d%s, %s", month_long, day, suffix, year_str);
+      break;
+    case SLOT_DATE_SHORT_US:
+      snprintf(buf, len, "%s %d%s", month_short, day, suffix);
+      break;
+    case SLOT_DATE_LONG_EU:
+      snprintf(buf, len, "%d%s %s %s", day, suffix, month_long, year_str);
+      break;
+    case SLOT_DATE_SHORT_EU:
+      snprintf(buf, len, "%d%s %s", day, suffix, month_short);
+      break;
+    case SLOT_DATE_NUM_MDY:
+      strftime(buf, len, "%m/%d/%Y", tm);
+      break;
+    case SLOT_DATE_NUM_DMY:
+      strftime(buf, len, "%d/%m/%Y", tm);
+      break;
+    case SLOT_DATE_NUM_YMD:
+      strftime(buf, len, "%Y/%m/%d", tm);
+      break;
+    case SLOT_DATE_DAY_NUM:
+      snprintf(buf, len, "%d", day);
+      break;
+    case SLOT_WEATHER_TEMP:
+      strncpy(buf, temp_str, len - 1);
+      break;
+    case SLOT_WEATHER_COND:
+      strncpy(buf, have_weather ? s_weather_cond : "--", len - 1);
+      break;
+    case SLOT_WEATHER_TEMP_COND:
+      if (have_weather) snprintf(buf, len, "%s %s", temp_str, s_weather_cond);
+      else strncpy(buf, "--", len - 1);
+      break;
+    case SLOT_WEATHER_COND_TEMP:
+      if (have_weather) snprintf(buf, len, "%s %s", s_weather_cond, temp_str);
+      else strncpy(buf, "--", len - 1);
+      break;
+  }
+}
+
+static void prv_update_slots(struct tm *tm) {
+  static char s1[40], s2[40];
+
+  prv_build_slot_text(s_settings.slot1_content, tm, s1, sizeof(s1));
+  prv_build_slot_text(s_settings.slot2_content, tm, s2, sizeof(s2));
+
+  apply_case(s1, s_settings.slot1_case);
+  apply_case(s2, s_settings.slot2_case);
+
+  text_layer_set_text(s_slot1_layer, s1);
+  text_layer_set_text(s_slot2_layer, s2);
+
+  layer_set_hidden((Layer*)s_slot1_layer, s_settings.slot1_content == SLOT_HIDDEN);
+  layer_set_hidden((Layer*)s_slot2_layer, s_settings.slot2_content == SLOT_HIDDEN);
 }
 
 // -------------------------------------------------------------------------
@@ -301,103 +422,12 @@ static bool prv_needs_update(Line *line, char lineStr[2][BUFFER_SIZE], char *nex
 }
 
 // -------------------------------------------------------------------------
-// Date formatting
-// -------------------------------------------------------------------------
-static void prv_set_date(struct tm *tm) {
-  static char date_str[40];
-  static char day_str[16];
-
-  memset(date_str, 0, sizeof(date_str));
-  memset(day_str, 0, sizeof(day_str));
-
-  int day = tm->tm_mday;
-  const char *suffix;
-  if (day == 1 || day == 21 || day == 31)    suffix = "st";
-  else if (day == 2 || day == 22)             suffix = "nd";
-  else if (day == 3 || day == 23)             suffix = "rd";
-  else                                        suffix = "th";
-
-  // Hide date layer if format is NONE
-  layer_set_hidden((Layer*)s_date_layer, s_settings.date_format == DATE_FORMAT_NONE);
-
-  if (s_settings.date_format == DATE_FORMAT_NONE) {
-    date_str[0] = 0;
-  } else if (s_settings.date_format == DATE_FORMAT_DAY_ONLY) {
-    snprintf(date_str, sizeof(date_str), "%d", tm->tm_mday);
-  } else switch (s_settings.date_format) {
-    case DATE_FORMAT_LONG_US: {
-      char month_str[16], year_str[8];
-      strftime(month_str, sizeof(month_str), "%B", tm);
-      strftime(year_str, sizeof(year_str), "%Y", tm);
-      snprintf(date_str, sizeof(date_str), "%s %d%s, %s", month_str, day, suffix, year_str);
-      break;
-    }
-    case DATE_FORMAT_SHORT_US: {
-      char month_str[8];
-      strftime(month_str, sizeof(month_str), "%b", tm);
-      snprintf(date_str, sizeof(date_str), "%s %d%s", month_str, day, suffix);
-      break;
-    }
-    case DATE_FORMAT_LONG_EU: {
-      char month_str[16], year_str[8];
-      strftime(month_str, sizeof(month_str), "%B", tm);
-      strftime(year_str, sizeof(year_str), "%Y", tm);
-      snprintf(date_str, sizeof(date_str), "%d%s %s %s", day, suffix, month_str, year_str);
-      break;
-    }
-    case DATE_FORMAT_SHORT_EU: {
-      char month_str[8];
-      strftime(month_str, sizeof(month_str), "%b", tm);
-      snprintf(date_str, sizeof(date_str), "%d%s %s", day, suffix, month_str);
-      break;
-    }
-    case DATE_FORMAT_NUM_MDY:
-      strftime(date_str, sizeof(date_str), "%m/%d/%Y", tm);
-      break;
-    case DATE_FORMAT_NUM_DMY:
-      strftime(date_str, sizeof(date_str), "%d/%m/%Y", tm);
-      break;
-    case DATE_FORMAT_NUM_YMD:
-      strftime(date_str, sizeof(date_str), "%Y/%m/%d", tm);
-      break;
-    case DATE_FORMAT_NONE:
-    case DATE_FORMAT_DAY_ONLY:
-    default:
-      break;
-  }
-
-  // Day of week
-  switch (s_settings.day_format) {
-    case DAY_FORMAT_LONG:
-      strftime(day_str, sizeof(day_str), "%A", tm);
-      break;
-    case DAY_FORMAT_SHORT:
-      strftime(day_str, sizeof(day_str), "%a", tm);
-      break;
-    case DAY_FORMAT_NONE:
-    default:
-      day_str[0] = 0;
-      break;
-  }
-
-  // Apply case
-  apply_case(date_str, s_settings.date_case);
-  apply_case(day_str, s_settings.day_case);
-
-  text_layer_set_text(s_date_layer, date_str);
-  text_layer_set_text(s_day_layer, day_str);
-
-  // Show/hide day layer
-  layer_set_hidden((Layer*)s_day_layer, s_settings.day_format == DAY_FORMAT_NONE);
-}
-
-// -------------------------------------------------------------------------
 // Display time
 // -------------------------------------------------------------------------
 static void prv_display_time(struct tm *t) {
   char l1[BUFFER_SIZE], l2[BUFFER_SIZE], l3[BUFFER_SIZE];
-  time_to_3words(t->tm_hour, t->tm_min, l1, l2, l3, BUFFER_SIZE, s_settings.prefix,
-                 s_screen_w <= 144);
+  time_to_3words(t->tm_hour, t->tm_min, l1, l2, l3, BUFFER_SIZE,
+                 s_settings.prefix, s_screen_w <= 144);
 
   apply_case(l1, s_settings.hour_case);
   apply_case(l2, s_settings.min_case);
@@ -420,7 +450,7 @@ static void prv_display_initial_time(struct tm *t) {
   text_layer_set_text(s_line1.currentLayer, s_line1Str[0]);
   text_layer_set_text(s_line2.currentLayer, s_line2Str[0]);
   text_layer_set_text(s_line3.currentLayer, s_line3Str[0]);
-  prv_set_date(t);
+  prv_update_slots(t);
 }
 
 // -------------------------------------------------------------------------
@@ -433,7 +463,6 @@ static void prv_apply_settings(void) {
   GFont light_font = prv_get_font_light();
   GTextAlignment time_align = prv_galign(s_settings.time_align);
 
-  // Line 1 = hour (bold font, hour color)
   text_layer_set_font(s_line1.currentLayer, bold_font);
   text_layer_set_font(s_line1.nextLayer,    bold_font);
   text_layer_set_text_color(s_line1.currentLayer, s_settings.hour_color);
@@ -443,7 +472,6 @@ static void prv_apply_settings(void) {
   text_layer_set_text_alignment(s_line1.currentLayer, time_align);
   text_layer_set_text_alignment(s_line1.nextLayer,    time_align);
 
-  // Lines 2 & 3 = minutes (light font, minute color)
   text_layer_set_font(s_line2.currentLayer, light_font);
   text_layer_set_font(s_line2.nextLayer,    light_font);
   text_layer_set_font(s_line3.currentLayer, light_font);
@@ -461,41 +489,36 @@ static void prv_apply_settings(void) {
   text_layer_set_text_alignment(s_line3.currentLayer, time_align);
   text_layer_set_text_alignment(s_line3.nextLayer,    time_align);
 
-  // Date layers
-  GTextAlignment date_align = prv_galign(s_settings.date_align);
-  text_layer_set_text_color(s_date_layer, s_settings.date_color);
-  text_layer_set_text_alignment(s_date_layer, date_align);
-  text_layer_set_text_color(s_day_layer, s_settings.day_color);
-  text_layer_set_text_alignment(s_day_layer, date_align);
+  // Slot layers
+  text_layer_set_text_color(s_slot1_layer, s_settings.slot1_color);
+  text_layer_set_text_alignment(s_slot1_layer, prv_galign(s_settings.slot1_align));
+  text_layer_set_text_color(s_slot2_layer, s_settings.slot2_color);
+  text_layer_set_text_alignment(s_slot2_layer, prv_galign(s_settings.slot2_align));
 
-  // Reposition time lines for current font
+  // Layout
   int lh = prv_line_height();
   int inset = PBL_IF_ROUND_ELSE(14, 0);
   int content_w = s_screen_w - (inset * 2);
-  bool day_hidden = (s_settings.day_format == DAY_FORMAT_NONE);
 
-  int y1, y2, y3, date_top, day_top;
+  int y1, y2, y3, slot1_top, slot2_top;
 
   if (s_screen_h <= 168) {
-    // Small screens: use original fixed positions that are proven to fit
-    // Lines at y=10, 47, 84 with date at 135/150 — exactly matches original watch
-    y1 = 10;
-    y2 = 47;
-    y3 = 84;
-    day_top  = day_hidden ? -20 : 135;
-    date_top = day_hidden ? 150 : 150;
+    y1 = 10; y2 = 47; y3 = 84;
+    slot1_top = 135;
+    slot2_top = 150;
   } else {
-    // Large screens: calculate centered layout with room for date
-    int date_area_h = day_hidden ? 22 : 50;
-    int available_h = s_screen_h - date_area_h;
+    bool both_hidden = (s_settings.slot1_content == SLOT_HIDDEN &&
+                        s_settings.slot2_content == SLOT_HIDDEN);
+    int info_area_h = both_hidden ? 22 : 50;
+    int available_h = s_screen_h - info_area_h;
     int total_text_h = lh * 3;
     int top_margin = (available_h - total_text_h) / 2;
     if (top_margin < 8) top_margin = 8;
     y1 = top_margin;
     y2 = top_margin + lh;
     y3 = top_margin + (lh * 2);
-    date_top = day_hidden ? (s_screen_h - 22) : (s_screen_h - 34);
-    day_top  = s_screen_h - 52;
+    slot2_top = s_screen_h - 22;
+    slot1_top = s_screen_h - 42;
   }
 
   layer_set_frame((Layer*)s_line1.currentLayer, GRect(inset, y1, content_w, lh + 8));
@@ -505,8 +528,8 @@ static void prv_apply_settings(void) {
   layer_set_frame((Layer*)s_line3.currentLayer, GRect(inset, y3, content_w, lh + 8));
   layer_set_frame((Layer*)s_line3.nextLayer,    GRect(s_screen_w, y3, content_w, lh + 8));
 
-  layer_set_frame((Layer*)s_date_layer, GRect(inset, date_top, content_w, 20));
-  layer_set_frame((Layer*)s_day_layer,  GRect(inset, day_top,  content_w, 20));
+  layer_set_frame((Layer*)s_slot1_layer, GRect(inset, slot1_top, content_w, 20));
+  layer_set_frame((Layer*)s_slot2_layer, GRect(inset, slot2_top, content_w, 20));
 }
 
 // -------------------------------------------------------------------------
@@ -524,29 +547,11 @@ static void prv_inbox_received(DictionaryIterator *iter, void *context) {
   t = dict_find(iter, MSG_KEY_MIN_COLOR);
   if (t) s_settings.min_color = (GColor){ .argb = (uint8_t)t->value->int32 };
 
-  t = dict_find(iter, MSG_KEY_DATE_COLOR);
-  if (t) s_settings.date_color = (GColor){ .argb = (uint8_t)t->value->int32 };
-
-  t = dict_find(iter, MSG_KEY_DAY_COLOR);
-  if (t) s_settings.day_color = (GColor){ .argb = (uint8_t)t->value->int32 };
-
   t = dict_find(iter, MSG_KEY_TIME_ALIGN);
   if (t) s_settings.time_align = (AlignOption)t->value->int32;
 
-  t = dict_find(iter, MSG_KEY_DATE_ALIGN);
-  if (t) s_settings.date_align = (AlignOption)t->value->int32;
-
   t = dict_find(iter, MSG_KEY_PREFIX);
   if (t) s_settings.prefix = (MinutePrefix)t->value->int32;
-
-  t = dict_find(iter, MSG_KEY_DATE_FORMAT);
-  if (t) s_settings.date_format = (DateFormat)t->value->int32;
-
-  t = dict_find(iter, MSG_KEY_DAY_FORMAT);
-  if (t) s_settings.day_format = (DayFormat)t->value->int32;
-
-  t = dict_find(iter, MSG_KEY_TIME_CASE);
-  if (t) s_settings.time_case = (CaseOption)t->value->int32;
 
   t = dict_find(iter, MSG_KEY_HOUR_CASE);
   if (t) s_settings.hour_case = (CaseOption)t->value->int32;
@@ -554,18 +559,51 @@ static void prv_inbox_received(DictionaryIterator *iter, void *context) {
   t = dict_find(iter, MSG_KEY_MIN_CASE);
   if (t) s_settings.min_case = (CaseOption)t->value->int32;
 
-  t = dict_find(iter, MSG_KEY_DATE_CASE);
-  if (t) s_settings.date_case = (CaseOption)t->value->int32;
+  t = dict_find(iter, MSG_KEY_SLOT1_CONTENT);
+  if (t) s_settings.slot1_content = (SlotContent)t->value->int32;
 
-  t = dict_find(iter, MSG_KEY_DAY_CASE);
-  if (t) s_settings.day_case = (CaseOption)t->value->int32;
+  t = dict_find(iter, MSG_KEY_SLOT1_COLOR);
+  if (t) s_settings.slot1_color = (GColor){ .argb = (uint8_t)t->value->int32 };
+
+  t = dict_find(iter, MSG_KEY_SLOT1_ALIGN);
+  if (t) s_settings.slot1_align = (AlignOption)t->value->int32;
+
+  t = dict_find(iter, MSG_KEY_SLOT1_CASE);
+  if (t) s_settings.slot1_case = (CaseOption)t->value->int32;
+
+  t = dict_find(iter, MSG_KEY_SLOT2_CONTENT);
+  if (t) s_settings.slot2_content = (SlotContent)t->value->int32;
+
+  t = dict_find(iter, MSG_KEY_SLOT2_COLOR);
+  if (t) s_settings.slot2_color = (GColor){ .argb = (uint8_t)t->value->int32 };
+
+  t = dict_find(iter, MSG_KEY_SLOT2_ALIGN);
+  if (t) s_settings.slot2_align = (AlignOption)t->value->int32;
+
+  t = dict_find(iter, MSG_KEY_SLOT2_CASE);
+  if (t) s_settings.slot2_case = (CaseOption)t->value->int32;
+
+  t = dict_find(iter, MSG_KEY_WEATHER_UNIT);
+  if (t) s_settings.weather_unit = (WeatherUnit)t->value->int32;
+
+  // Weather data (sent separately from phone on refresh)
+  t = dict_find(iter, MSG_KEY_WEATHER_TEMP);
+  if (t) {
+    s_weather_temp = t->value->int32;
+    persist_write_int(PERSIST_KEY_WEATHER_TEMP, s_weather_temp);
+  }
+
+  t = dict_find(iter, MSG_KEY_WEATHER_COND);
+  if (t) {
+    strncpy(s_weather_cond, t->value->cstring, sizeof(s_weather_cond) - 1);
+    persist_write_string(PERSIST_KEY_WEATHER_COND, s_weather_cond);
+  }
 
   prv_save_settings();
   prv_apply_settings();
 
   time_t now = time(NULL);
-  struct tm *tm_now = localtime(&now);
-  prv_display_initial_time(tm_now);
+  prv_display_initial_time(localtime(&now));
 }
 
 static void prv_inbox_dropped(AppMessageResult reason, void *context) {
@@ -577,9 +615,7 @@ static void prv_inbox_dropped(AppMessageResult reason, void *context) {
 // -------------------------------------------------------------------------
 static void prv_handle_tick(struct tm *tick_time, TimeUnits units_changed) {
   prv_display_time(tick_time);
-  if (units_changed & DAY_UNIT) {
-    prv_set_date(tick_time);
-  }
+  prv_update_slots(tick_time);
 }
 
 // -------------------------------------------------------------------------
@@ -597,13 +633,13 @@ static void prv_window_load(Window *window) {
   s_line3.currentLayer = text_layer_create(GRect(0, 0, s_screen_w, 60));
   s_line3.nextLayer    = text_layer_create(GRect(s_screen_w, 0, s_screen_w, 60));
 
-  s_date_layer = text_layer_create(GRect(0, 0, s_screen_w, 20));
-  text_layer_set_background_color(s_date_layer, GColorClear);
-  text_layer_set_font(s_date_layer, fonts_get_system_font(FONT_KEY_GOTHIC_14));
+  s_slot1_layer = text_layer_create(GRect(0, 0, s_screen_w, 20));
+  text_layer_set_background_color(s_slot1_layer, GColorClear);
+  text_layer_set_font(s_slot1_layer, fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD));
 
-  s_day_layer = text_layer_create(GRect(0, 0, s_screen_w, 20));
-  text_layer_set_background_color(s_day_layer, GColorClear);
-  text_layer_set_font(s_day_layer, fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD));
+  s_slot2_layer = text_layer_create(GRect(0, 0, s_screen_w, 20));
+  text_layer_set_background_color(s_slot2_layer, GColorClear);
+  text_layer_set_font(s_slot2_layer, fonts_get_system_font(FONT_KEY_GOTHIC_14));
 
   prv_apply_settings();
 
@@ -613,8 +649,8 @@ static void prv_window_load(Window *window) {
   layer_add_child(root, (Layer*)s_line2.nextLayer);
   layer_add_child(root, (Layer*)s_line3.currentLayer);
   layer_add_child(root, (Layer*)s_line3.nextLayer);
-  layer_add_child(root, (Layer*)s_date_layer);
-  layer_add_child(root, (Layer*)s_day_layer);
+  layer_add_child(root, (Layer*)s_slot1_layer);
+  layer_add_child(root, (Layer*)s_slot2_layer);
 
   time_t now = time(NULL);
   prv_display_initial_time(localtime(&now));
@@ -634,8 +670,8 @@ static void prv_window_unload(Window *window) {
   text_layer_destroy(s_line2.nextLayer);
   text_layer_destroy(s_line3.currentLayer);
   text_layer_destroy(s_line3.nextLayer);
-  text_layer_destroy(s_date_layer);
-  text_layer_destroy(s_day_layer);
+  text_layer_destroy(s_slot1_layer);
+  text_layer_destroy(s_slot2_layer);
 }
 
 // -------------------------------------------------------------------------
@@ -651,7 +687,7 @@ int main(void) {
   });
   window_stack_push(s_window, true);
 
-  app_message_open(512, 64);
+  app_message_open(256, 64);
   app_message_register_inbox_received(prv_inbox_received);
   app_message_register_inbox_dropped(prv_inbox_dropped);
 

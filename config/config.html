@@ -32,45 +32,29 @@
     .picker-close { margin-top: 16px; width: 100%; padding: 12px; background: #3a3a3a; border: none; border-radius: 10px; color: #f0f0f0; font-size: 15px; cursor: pointer; }
     .save-btn { display: block; width: calc(100% - 32px); margin: 24px 16px 0; padding: 16px; background: #007aff; border: none; border-radius: 12px; color: #fff; font-size: 16px; font-weight: 600; cursor: pointer; }
     .save-btn:active { background: #005ec4; }
+    .slot-card { background: #252525; border-radius: 12px; overflow: hidden; }
   </style>
 </head>
 <body>
 <header><h1>Text Watch Settings</h1></header>
 
+<!-- TIME COLORS -->
 <div class="section">
-  <div class="section-title">Colors</div>
+  <div class="section-title">Time Colors</div>
   <div class="card">
     <div class="row"><label>Background</label><div class="color-wrap"><span class="color-label" id="bg-hex">#000000</span><span class="color-swatch" id="bg-swatch" onclick="openPicker('bg')"></span></div></div>
     <div class="row"><label>Hour text</label><div class="color-wrap"><span class="color-label" id="hour-hex">#FFFFFF</span><span class="color-swatch" id="hour-swatch" onclick="openPicker('hour')"></span></div></div>
     <div class="row"><label>Minute text</label><div class="color-wrap"><span class="color-label" id="min-hex">#FFFFFF</span><span class="color-swatch" id="min-swatch" onclick="openPicker('min')"></span></div></div>
-    <div class="row"><label>Day of week</label><div class="color-wrap"><span class="color-label" id="day-hex">#FFFFFF</span><span class="color-swatch" id="day-swatch" onclick="openPicker('day')"></span></div></div>
-    <div class="row"><label>Date text</label><div class="color-wrap"><span class="color-label" id="date-hex">#FFFFFF</span><span class="color-swatch" id="date-swatch" onclick="openPicker('date')"></span></div></div>
   </div>
 </div>
 
-
-
+<!-- TIME LAYOUT -->
 <div class="section">
-  <div class="section-title">Layout</div>
+  <div class="section-title">Time Layout</div>
   <div class="card">
-    <div class="row"><label>Time alignment</label><select id="time-align"><option value="0">Left</option><option value="1">Center</option><option value="2">Right</option></select></div>
-    <div class="row"><label>Date alignment</label><select id="date-align"><option value="0">Left</option><option value="1">Center</option><option value="2" selected>Right</option></select></div>
-  </div>
-</div>
-
-<div class="section">
-  <div class="section-title">Text Case</div>
-  <div class="card">
-    <div class="row"><label>Hour</label><select id="hour-case"><option value="0">lowercase</option><option value="1">UPPERCASE</option><option value="2">Proper Case</option></select></div>
-    <div class="row"><label>Minutes</label><select id="min-case"><option value="0">lowercase</option><option value="1">UPPERCASE</option><option value="2">Proper Case</option></select></div>
-    <div class="row"><label>Day of week</label><select id="day-case"><option value="0">lowercase</option><option value="1">UPPERCASE</option><option value="2">Proper Case</option></select></div>
-    <div class="row"><label>Date</label><select id="date-case"><option value="0">lowercase</option><option value="1">UPPERCASE</option><option value="2">Proper Case</option></select></div>
-  </div>
-</div>
-
-<div class="section">
-  <div class="section-title">Time Format</div>
-  <div class="card">
+    <div class="row"><label>Alignment</label><select id="time-align"><option value="0">Left</option><option value="1">Center</option><option value="2">Right</option></select></div>
+    <div class="row"><label>Hour case</label><select id="hour-case"><option value="0">lowercase</option><option value="1">UPPERCASE</option><option value="2">Proper Case</option></select></div>
+    <div class="row"><label>Minute case</label><select id="min-case"><option value="0">lowercase</option><option value="1">UPPERCASE</option><option value="2">Proper Case</option></select></div>
     <div class="row">
       <div class="label-wrap"><label>Minute prefix</label><div class="hint">For single-digit minutes (e.g. 5:04)</div></div>
       <select id="prefix"><option value="0">None — "four"</option><option value="1">oh — "oh four"</option><option value="2">o' — "o' four"</option></select>
@@ -78,35 +62,89 @@
   </div>
 </div>
 
+<!-- WEATHER -->
 <div class="section">
-  <div class="section-title">Day of Week</div>
+  <div class="section-title">Weather</div>
   <div class="card">
-    <div class="row"><label>Format</label><select id="day-format"><option value="0">Long (monday)</option><option value="1">Short (mon)</option><option value="2">Hidden</option></select></div>
+    <div class="row"><label>Temperature unit</label><select id="weather-unit"><option value="0">Fahrenheit (°F)</option><option value="1">Celsius (°C)</option></select></div>
   </div>
 </div>
 
+<!-- INFO SLOT 1 -->
 <div class="section">
-  <div class="section-title">Date Format</div>
-  <div class="card">
+  <div class="section-title">Info Line 1 (top)</div>
+  <div class="slot-card">
     <div class="row">
-      <div class="label-wrap"><label>Format</label><div class="hint" id="date-hint">e.g. april 27th, 2026</div></div>
-      <select id="date-format" onchange="updateDateHint()">
-        <option value="0">US Long — Month DDth, YYYY</option>
-        <option value="1">US Short — Mon DDth</option>
-        <option value="2">EU Long — DDth Month YYYY</option>
-        <option value="3">EU Short — DDth Mon</option>
-        <option value="4">Numeric M/D/Y</option>
-        <option value="5">Numeric D/M/Y</option>
-        <option value="6">Numeric Y/M/D</option>
-        <option value="7">Hidden</option>
-        <option value="8">Day number only</option>
+      <div class="label-wrap"><label>Content</label><div class="hint" id="slot1-hint">e.g. monday</div></div>
+      <select id="slot1-content" onchange="updateSlotHint(1)">
+        <option value="0">Hidden</option>
+        <optgroup label="Day of Week">
+          <option value="1">Day — Long (monday)</option>
+          <option value="2">Day — Short (mon)</option>
+        </optgroup>
+        <optgroup label="Date">
+          <option value="3">US Long (april 27th, 2026)</option>
+          <option value="4">US Short (apr 27th)</option>
+          <option value="5">EU Long (27th april 2026)</option>
+          <option value="6">EU Short (27th apr)</option>
+          <option value="7">Numeric M/D/Y</option>
+          <option value="8">Numeric D/M/Y</option>
+          <option value="9">Numeric Y/M/D</option>
+          <option value="10">Day number only (27)</option>
+        </optgroup>
+        <optgroup label="Weather">
+          <option value="11">Temp only (72°f)</option>
+          <option value="12">Conditions only (cloudy)</option>
+          <option value="13">Temp + Conditions (72°f cloudy)</option>
+          <option value="14">Conditions + Temp (cloudy 72°f)</option>
+        </optgroup>
       </select>
     </div>
+    <div class="row"><label>Color</label><div class="color-wrap"><span class="color-label" id="slot1-hex">#FFFFFF</span><span class="color-swatch" id="slot1-swatch" onclick="openPicker('slot1')"></span></div></div>
+    <div class="row"><label>Alignment</label><select id="slot1-align"><option value="0">Left</option><option value="1">Center</option><option value="2" selected>Right</option></select></div>
+    <div class="row"><label>Case</label><select id="slot1-case"><option value="0">lowercase</option><option value="1">UPPERCASE</option><option value="2">Proper Case</option></select></div>
+  </div>
+</div>
+
+<!-- INFO SLOT 2 -->
+<div class="section">
+  <div class="section-title">Info Line 2 (bottom)</div>
+  <div class="slot-card">
+    <div class="row">
+      <div class="label-wrap"><label>Content</label><div class="hint" id="slot2-hint">e.g. april 27th, 2026</div></div>
+      <select id="slot2-content" onchange="updateSlotHint(2)">
+        <option value="0">Hidden</option>
+        <optgroup label="Day of Week">
+          <option value="1">Day — Long (monday)</option>
+          <option value="2">Day — Short (mon)</option>
+        </optgroup>
+        <optgroup label="Date">
+          <option value="3">US Long (april 27th, 2026)</option>
+          <option value="4">US Short (apr 27th)</option>
+          <option value="5">EU Long (27th april 2026)</option>
+          <option value="6">EU Short (27th apr)</option>
+          <option value="7">Numeric M/D/Y</option>
+          <option value="8">Numeric D/M/Y</option>
+          <option value="9">Numeric Y/M/D</option>
+          <option value="10">Day number only (27)</option>
+        </optgroup>
+        <optgroup label="Weather">
+          <option value="11">Temp only (72°f)</option>
+          <option value="12">Conditions only (cloudy)</option>
+          <option value="13">Temp + Conditions (72°f cloudy)</option>
+          <option value="14">Conditions + Temp (cloudy 72°f)</option>
+        </optgroup>
+      </select>
+    </div>
+    <div class="row"><label>Color</label><div class="color-wrap"><span class="color-label" id="slot2-hex">#FFFFFF</span><span class="color-swatch" id="slot2-swatch" onclick="openPicker('slot2')"></span></div></div>
+    <div class="row"><label>Alignment</label><select id="slot2-align"><option value="0">Left</option><option value="1">Center</option><option value="2" selected>Right</option></select></div>
+    <div class="row"><label>Case</label><select id="slot2-case"><option value="0">lowercase</option><option value="1">UPPERCASE</option><option value="2">Proper Case</option></select></div>
   </div>
 </div>
 
 <button class="save-btn" onclick="saveAndClose()">Save &amp; Close</button>
 
+<!-- COLOR PICKER -->
 <div class="color-picker-overlay" id="picker-overlay">
   <div class="color-picker-box">
     <h2 id="picker-title">Choose a color</h2>
@@ -116,40 +154,23 @@
 </div>
 
 <script>
-// Correct Pebble 64-color palette: 0b11RRGGBB, R/G/B each 0-3 (0=0x00,1=0x55,2=0xAA,3=0xFF)
 const PALETTE = [
-  // Grays
-  ["#000000",0xC0], ["#555555",0xD5], ["#AAAAAA",0xEA], ["#FFFFFF",0xFF],
-  // Reds
-  ["#550000",0xD0], ["#AA0000",0xE0], ["#FF0000",0xF0], ["#FF5555",0xF5],
-  // Oranges
-  ["#FF5500",0xF4], ["#AA5500",0xE4], ["#FFAA00",0xF8], ["#FFAA55",0xF9],
-  // Yellows
-  ["#555500",0xD4], ["#AAAA00",0xE8], ["#FFFF00",0xFC], ["#FFFF55",0xFD],
-  // Yellow-greens
-  ["#AAAA55",0xE9], ["#FFFFAA",0xFE], ["#AAFF00",0xEC], ["#55AA00",0xD8],
-  // Greens
-  ["#005500",0xC4], ["#00AA00",0xC8], ["#00FF00",0xCC], ["#55FF00",0xDC],
-  // Light greens
-  ["#55AA55",0xD9], ["#55FF55",0xDD], ["#AAFF55",0xED], ["#AAFFAA",0xEE],
-  // Green-cyans
-  ["#00AA55",0xC9], ["#00FF55",0xCD], ["#00FFAA",0xCE], ["#55FFAA",0xDE],
-  // Teals
-  ["#005555",0xC5], ["#00AAAA",0xCA], ["#55AAAA",0xDA], ["#AAFFFF",0xEF],
-  // Cyans
-  ["#0055AA",0xC6], ["#00AAFF",0xCB], ["#00FFFF",0xCF], ["#55FFFF",0xDF],
-  // Light blues
-  ["#55AAFF",0xDB], ["#0055FF",0xC7], ["#5555AA",0xD6], ["#5555FF",0xD7],
-  // Blues
-  ["#000055",0xC1], ["#0000AA",0xC2], ["#0000FF",0xC3], ["#AAAAFF",0xEB],
-  // Blue-purples
-  ["#5500AA",0xD2], ["#5500FF",0xD3], ["#AA00FF",0xE3], ["#AA55FF",0xE7],
-  // Purples
-  ["#550055",0xD1], ["#AA00AA",0xE2], ["#AA55AA",0xE6], ["#FF00FF",0xF3],
-  // Pinks / magentas
-  ["#AA0055",0xE1], ["#FF0055",0xF1], ["#FF55AA",0xF6], ["#FF00AA",0xF2],
-  // Pale pinks
-  ["#FFAAFF",0xFB], ["#FF55FF",0xF7], ["#FFAAAA",0xFA], ["#AA5555",0xE5]
+  ["#000000",0xC0],["#555555",0xD5],["#AAAAAA",0xEA],["#FFFFFF",0xFF],
+  ["#550000",0xD0],["#AA0000",0xE0],["#FF0000",0xF0],["#FF5555",0xF5],
+  ["#FF5500",0xF4],["#AA5500",0xE4],["#FFAA00",0xF8],["#FFAA55",0xF9],
+  ["#555500",0xD4],["#AAAA00",0xE8],["#FFFF00",0xFC],["#FFFF55",0xFD],
+  ["#AAAA55",0xE9],["#FFFFAA",0xFE],["#AAFF00",0xEC],["#55AA00",0xD8],
+  ["#005500",0xC4],["#00AA00",0xC8],["#00FF00",0xCC],["#55FF00",0xDC],
+  ["#55AA55",0xD9],["#55FF55",0xDD],["#AAFF55",0xED],["#AAFFAA",0xEE],
+  ["#00AA55",0xC9],["#00FF55",0xCD],["#00FFAA",0xCE],["#55FFAA",0xDE],
+  ["#005555",0xC5],["#00AAAA",0xCA],["#55AAAA",0xDA],["#AAFFFF",0xEF],
+  ["#0055AA",0xC6],["#00AAFF",0xCB],["#00FFFF",0xCF],["#55FFFF",0xDF],
+  ["#55AAFF",0xDB],["#0055FF",0xC7],["#5555AA",0xD6],["#5555FF",0xD7],
+  ["#000055",0xC1],["#0000AA",0xC2],["#0000FF",0xC3],["#AAAAFF",0xEB],
+  ["#5500AA",0xD2],["#5500FF",0xD3],["#AA00FF",0xE3],["#AA55FF",0xE7],
+  ["#550055",0xD1],["#AA00AA",0xE2],["#AA55AA",0xE6],["#FF00FF",0xF3],
+  ["#AA0055",0xE1],["#FF0055",0xF1],["#FF55AA",0xF6],["#FF00AA",0xF2],
+  ["#FFAAFF",0xFB],["#FF55FF",0xF7],["#FFAAAA",0xFA],["#AA5555",0xE5]
 ];
 
 function argbToHex(argb) {
@@ -160,9 +181,11 @@ function argbToHex(argb) {
 }
 
 let config = {
-  bg_color:0xC0, hour_color:0xFF, min_color:0xFF, date_color:0xFF, day_color:0xFF,
-  time_align:0, date_align:2, prefix:0, date_format:0, day_format:0,
-  hour_case:0, min_case:0, date_case:0, day_case:0,
+  bg_color:0xC0, hour_color:0xFF, min_color:0xFF,
+  time_align:0, prefix:0, hour_case:0, min_case:0,
+  slot1_content:1, slot1_color:0xFF, slot1_align:2, slot1_case:0,
+  slot2_content:3, slot2_color:0xFF, slot2_align:2, slot2_case:0,
+  weather_unit:0,
 };
 
 let currentTarget = null;
@@ -181,19 +204,41 @@ function updateSwatch(id, argb) {
   document.getElementById(id+'-hex').textContent = hex;
 }
 
+const SLOT_HINTS = [
+  'Hidden',
+  'e.g. monday','e.g. mon',
+  'e.g. april 27th, 2026','e.g. apr 27th',
+  'e.g. 27th april 2026','e.g. 27th apr',
+  'e.g. 04/27/2026','e.g. 27/04/2026','e.g. 2026/04/27',
+  'e.g. 27',
+  'e.g. 72°f','e.g. cloudy','e.g. 72°f cloudy','e.g. cloudy 72°f'
+];
+
+function updateSlotHint(slot) {
+  const val = parseInt(document.getElementById('slot'+slot+'-content').value);
+  document.getElementById('slot'+slot+'-hint').textContent = SLOT_HINTS[val] || '';
+}
+
 function initUI() {
   loadConfig();
-  ['bg','hour','min','date','day'].forEach(id => updateSwatch(id, config[id+'_color']));
-  document.getElementById('time-align').value  = config.time_align;
-  document.getElementById('date-align').value  = config.date_align;
-  document.getElementById('hour-case').value   = config.hour_case;
-  document.getElementById('min-case').value    = config.min_case;
-  document.getElementById('date-case').value   = config.date_case;
-  document.getElementById('day-case').value    = config.day_case;
-  document.getElementById('prefix').value      = config.prefix;
-  document.getElementById('day-format').value  = config.day_format;
-  document.getElementById('date-format').value = config.date_format;
-  updateDateHint();
+  ['bg','hour','min','slot1','slot2'].forEach(id => updateSwatch(id, config[id+'_color'] || config[id.replace('slot','slot')+'_color']));
+  // fix slot color keys
+  updateSwatch('slot1', config.slot1_color);
+  updateSwatch('slot2', config.slot2_color);
+
+  document.getElementById('time-align').value    = config.time_align;
+  document.getElementById('hour-case').value     = config.hour_case;
+  document.getElementById('min-case').value      = config.min_case;
+  document.getElementById('prefix').value        = config.prefix;
+  document.getElementById('weather-unit').value  = config.weather_unit;
+  document.getElementById('slot1-content').value = config.slot1_content;
+  document.getElementById('slot1-align').value   = config.slot1_align;
+  document.getElementById('slot1-case').value    = config.slot1_case;
+  document.getElementById('slot2-content').value = config.slot2_content;
+  document.getElementById('slot2-align').value   = config.slot2_align;
+  document.getElementById('slot2-case').value    = config.slot2_case;
+  updateSlotHint(1);
+  updateSlotHint(2);
 }
 
 function buildGrid(selectedArgb) {
@@ -210,7 +255,10 @@ function buildGrid(selectedArgb) {
 
 function openPicker(target) {
   currentTarget = target;
-  const titles = {bg:'Background',hour:'Hour Text',min:'Minute Text',date:'Date Text',day:'Day of Week'};
+  const titles = {
+    bg:'Background', hour:'Hour Text', min:'Minute Text',
+    slot1:'Info Line 1', slot2:'Info Line 2'
+  };
   document.getElementById('picker-title').textContent = (titles[target]||target) + ' Color';
   buildGrid(config[target+'_color']);
   document.getElementById('picker-overlay').classList.add('active');
@@ -228,36 +276,28 @@ function closePicker() {
   currentTarget = null;
 }
 
-const DATE_HINTS = [
-  "e.g. april 27th, 2026","e.g. apr 27th",
-  "e.g. 27th april 2026","e.g. 27th apr",
-  "e.g. 04/27/2026","e.g. 27/04/2026","e.g. 2026/04/27",
-  "Date hidden","Day number only (e.g. 27)"
-];
-
-function updateDateHint() {
-  const val = parseInt(document.getElementById('date-format').value);
-  document.getElementById('date-hint').textContent = DATE_HINTS[val] || '';
-}
-
 function saveAndClose() {
-  config.time_align   = parseInt(document.getElementById('time-align').value);
-  config.date_align   = parseInt(document.getElementById('date-align').value);
-  config.hour_case    = parseInt(document.getElementById('hour-case').value);
-  config.min_case     = parseInt(document.getElementById('min-case').value);
-  config.date_case    = parseInt(document.getElementById('date-case').value);
-  config.day_case     = parseInt(document.getElementById('day-case').value);
-  config.prefix       = parseInt(document.getElementById('prefix').value);
-  config.day_format   = parseInt(document.getElementById('day-format').value);
-  config.date_format  = parseInt(document.getElementById('date-format').value);
+  config.time_align    = parseInt(document.getElementById('time-align').value);
+  config.hour_case     = parseInt(document.getElementById('hour-case').value);
+  config.min_case      = parseInt(document.getElementById('min-case').value);
+  config.prefix        = parseInt(document.getElementById('prefix').value);
+  config.weather_unit  = parseInt(document.getElementById('weather-unit').value);
+  config.slot1_content = parseInt(document.getElementById('slot1-content').value);
+  config.slot1_align   = parseInt(document.getElementById('slot1-align').value);
+  config.slot1_case    = parseInt(document.getElementById('slot1-case').value);
+  config.slot2_content = parseInt(document.getElementById('slot2-content').value);
+  config.slot2_align   = parseInt(document.getElementById('slot2-align').value);
+  config.slot2_case    = parseInt(document.getElementById('slot2-case').value);
 
   const payload = {
     bg_color:config.bg_color, hour_color:config.hour_color, min_color:config.min_color,
-    date_color:config.date_color, day_color:config.day_color,
-    time_align:config.time_align, date_align:config.date_align,
-    prefix:config.prefix, date_format:config.date_format, day_format:config.day_format,
+    time_align:config.time_align, prefix:config.prefix,
     hour_case:config.hour_case, min_case:config.min_case,
-    date_case:config.date_case, day_case:config.day_case,
+    slot1_content:config.slot1_content, slot1_color:config.slot1_color,
+    slot1_align:config.slot1_align, slot1_case:config.slot1_case,
+    slot2_content:config.slot2_content, slot2_color:config.slot2_color,
+    slot2_align:config.slot2_align, slot2_case:config.slot2_case,
+    weather_unit:config.weather_unit,
   };
 
   location.href = 'pebblejs://close#' + encodeURIComponent(JSON.stringify(payload));

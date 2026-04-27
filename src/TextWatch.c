@@ -184,7 +184,7 @@ static void prv_load_settings(void) {
   s_settings.time_align  = persist_exists(PERSIST_KEY_TIME_ALIGN)
                            ? persist_read_int(PERSIST_KEY_TIME_ALIGN) : ALIGN_LEFT;
   s_settings.prefix      = persist_exists(PERSIST_KEY_PREFIX)
-                           ? persist_read_int(PERSIST_KEY_PREFIX) : PREFIX_NONE;
+                           ? persist_read_int(PERSIST_KEY_PREFIX) : PREFIX_O;
   s_settings.hour_case   = persist_exists(PERSIST_KEY_HOUR_CASE)
                            ? persist_read_int(PERSIST_KEY_HOUR_CASE) : CASE_LOWER;
   s_settings.min_case    = persist_exists(PERSIST_KEY_MIN_CASE)

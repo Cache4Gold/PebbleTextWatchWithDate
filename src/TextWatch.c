@@ -208,14 +208,24 @@ static void prv_save_settings(void) {
 // Font helpers
 // -------------------------------------------------------------------------
 static GFont prv_get_font_bold(void) {
+  // Use smaller font on narrow screens (original Pebble/Time = 144px wide)
+  if (s_screen_w <= 144) {
+    return fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD);
+  }
   return fonts_get_system_font(FONT_KEY_BITHAM_42_BOLD);
 }
 
 static GFont prv_get_font_light(void) {
+  if (s_screen_w <= 144) {
+    return fonts_get_system_font(FONT_KEY_GOTHIC_28);
+  }
   return fonts_get_system_font(FONT_KEY_BITHAM_42_LIGHT);
 }
 
 static int prv_line_height(void) {
+  if (s_screen_w <= 144) {
+    return 34; // Gothic 28
+  }
   return 50; // Bitham 42
 }
 

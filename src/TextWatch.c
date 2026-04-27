@@ -385,6 +385,10 @@ static void prv_set_date(struct tm *tm) {
     case DATE_FORMAT_NUM_YMD:
       strftime(date_str, sizeof(date_str), "%Y/%m/%d", tm);
       break;
+    case DATE_FORMAT_NONE:
+    case DATE_FORMAT_DAY_ONLY:
+    default:
+      break;
   }
 
   // Day of week

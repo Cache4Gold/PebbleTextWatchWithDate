@@ -180,7 +180,7 @@ static void prv_load_settings(void) {
   s_settings.day_format  = persist_exists(PERSIST_KEY_DAY_FORMAT)
                            ? persist_read_int(PERSIST_KEY_DAY_FORMAT) : DAY_FORMAT_LONG;
   s_settings.font_choice = persist_exists(PERSIST_KEY_FONT_CHOICE)
-                           ? persist_read_int(PERSIST_KEY_FONT_CHOICE) : FONT_BITHAM_42;
+                           ? persist_read_int(PERSIST_KEY_FONT_CHOICE) : FONT_BITHAM_42_BOLDLIGHT;
   s_settings.time_case   = persist_exists(PERSIST_KEY_TIME_CASE)
                            ? persist_read_int(PERSIST_KEY_TIME_CASE) : CASE_LOWER;
   s_settings.hour_case   = persist_exists(PERSIST_KEY_HOUR_CASE)

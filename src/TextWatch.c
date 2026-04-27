@@ -14,8 +14,14 @@
 #define PERSIST_KEY_PREFIX          7
 #define PERSIST_KEY_DATE_FORMAT     8
 #define PERSIST_KEY_FONT_CHOICE     9
+#define PERSIST_KEY_HOUR_COLOR      10
+#define PERSIST_KEY_MIN_COLOR       11
+#define PERSIST_KEY_DAY_FORMAT      12
+#define PERSIST_KEY_TIME_CASE       13
+#define PERSIST_KEY_DATE_CASE       14
+#define PERSIST_KEY_DAY_CASE        15
 
-// AppMessage keys (must match config page JS)
+// AppMessage keys
 #define MSG_KEY_BG_COLOR            1
 #define MSG_KEY_TIME_COLOR          2
 #define MSG_KEY_DATE_COLOR          3
@@ -25,9 +31,15 @@
 #define MSG_KEY_PREFIX              7
 #define MSG_KEY_DATE_FORMAT         8
 #define MSG_KEY_FONT_CHOICE         9
+#define MSG_KEY_HOUR_COLOR          10
+#define MSG_KEY_MIN_COLOR           11
+#define MSG_KEY_DAY_FORMAT          12
+#define MSG_KEY_TIME_CASE           13
+#define MSG_KEY_DATE_CASE           14
+#define MSG_KEY_DAY_CASE            15
 
 // -------------------------------------------------------------------------
-// Enums for config options
+// Enums
 // -------------------------------------------------------------------------
 typedef enum {
   ALIGN_LEFT   = 0,
@@ -36,35 +48,53 @@ typedef enum {
 } AlignOption;
 
 typedef enum {
-  DATE_FORMAT_LONG        = 0,  // "wednesday / september 25th, 2024"
-  DATE_FORMAT_SHORT       = 1,  // "wed / sep 25th"
-  DATE_FORMAT_NUMERIC_MDY = 2,  // "wed / 9/25/2024"
-  DATE_FORMAT_NUMERIC_DMY = 3,  // "wed / 25/9/2024"
-  DATE_FORMAT_NUMERIC_YMD = 4,  // "wed / 2024/9/25"
-  DATE_FORMAT_DAY_ONLY    = 5,  // just the day name, no date
+  DATE_FORMAT_LONG_US   = 0,  // monday / april 27th, 2026
+  DATE_FORMAT_SHORT_US  = 1,  // mon / apr 27th
+  DATE_FORMAT_LONG_EU   = 2,  // monday / 27th april 2026
+  DATE_FORMAT_SHORT_EU  = 3,  // mon / 27th apr
+  DATE_FORMAT_NUM_MDY   = 4,  // 4/27/2026
+  DATE_FORMAT_NUM_DMY   = 5,  // 27/4/2026
+  DATE_FORMAT_NUM_YMD   = 6,  // 2026/4/27
 } DateFormat;
 
 typedef enum {
-  FONT_BITHAM_42    = 0,
-  FONT_ROBOTO_49    = 1,
-  FONT_DROID_28     = 2,
-  FONT_LECO_38      = 3,
-  FONT_GOTHIC_28    = 4,
+  DAY_FORMAT_LONG  = 0,  // monday
+  DAY_FORMAT_SHORT = 1,  // mon
+  DAY_FORMAT_NONE  = 2,  // hidden
+} DayFormat;
+
+typedef enum {
+  FONT_BITHAM_42  = 0,
+  FONT_ROBOTO_49  = 1,
+  FONT_BITHAM_34  = 2,
+  FONT_GOTHIC_24  = 3,
+  FONT_BITHAM_30  = 4,
 } FontChoice;
+
+typedef enum {
+  CASE_LOWER  = 0,
+  CASE_UPPER  = 1,
+  CASE_PROPER = 2,
+} CaseOption;
 
 // -------------------------------------------------------------------------
 // Settings struct
 // -------------------------------------------------------------------------
 typedef struct {
-  GColor     bg_color;
-  GColor     time_color;
-  GColor     date_color;
-  GColor     day_color;
+  GColor      bg_color;
+  GColor      hour_color;
+  GColor      min_color;
+  GColor      date_color;
+  GColor      day_color;
   AlignOption time_align;
   AlignOption date_align;
   MinutePrefix prefix;
   DateFormat  date_format;
+  DayFormat   day_format;
   FontChoice  font_choice;
+  CaseOption  time_case;
+  CaseOption  date_case;
+  CaseOption  day_case;
 } Settings;
 
 // -------------------------------------------------------------------------
@@ -90,19 +120,40 @@ static char s_line1Str[2][BUFFER_SIZE];
 static char s_line2Str[2][BUFFER_SIZE];
 static char s_line3Str[2][BUFFER_SIZE];
 
-// Screen dimensions — resolved at runtime so we support all hardware
 static int s_screen_w;
 static int s_screen_h;
 
 // -------------------------------------------------------------------------
-// Default settings
+// Case transformation
+// -------------------------------------------------------------------------
+static void apply_case(char *str, CaseOption c) {
+  if (!str || str[0] == 0) return;
+  switch (c) {
+    case CASE_UPPER:
+      for (int i = 0; str[i]; i++) str[i] = (char)toupper((unsigned char)str[i]);
+      break;
+    case CASE_PROPER:
+      str[0] = (char)toupper((unsigned char)str[0]);
+      break;
+    case CASE_LOWER:
+    default:
+      for (int i = 0; str[i]; i++) str[i] = (char)tolower((unsigned char)str[i]);
+      break;
+  }
+}
+
+// -------------------------------------------------------------------------
+// Settings load/save
 // -------------------------------------------------------------------------
 static void prv_load_settings(void) {
   s_settings.bg_color    = persist_exists(PERSIST_KEY_BG_COLOR)
                            ? (GColor){ .argb = persist_read_int(PERSIST_KEY_BG_COLOR) }
                            : GColorBlack;
-  s_settings.time_color  = persist_exists(PERSIST_KEY_TIME_COLOR)
-                           ? (GColor){ .argb = persist_read_int(PERSIST_KEY_TIME_COLOR) }
+  s_settings.hour_color  = persist_exists(PERSIST_KEY_HOUR_COLOR)
+                           ? (GColor){ .argb = persist_read_int(PERSIST_KEY_HOUR_COLOR) }
+                           : GColorWhite;
+  s_settings.min_color   = persist_exists(PERSIST_KEY_MIN_COLOR)
+                           ? (GColor){ .argb = persist_read_int(PERSIST_KEY_MIN_COLOR) }
                            : GColorWhite;
   s_settings.date_color  = persist_exists(PERSIST_KEY_DATE_COLOR)
                            ? (GColor){ .argb = persist_read_int(PERSIST_KEY_DATE_COLOR) }
@@ -111,65 +162,72 @@ static void prv_load_settings(void) {
                            ? (GColor){ .argb = persist_read_int(PERSIST_KEY_DAY_COLOR) }
                            : GColorWhite;
   s_settings.time_align  = persist_exists(PERSIST_KEY_TIME_ALIGN)
-                           ? persist_read_int(PERSIST_KEY_TIME_ALIGN)
-                           : ALIGN_LEFT;
+                           ? persist_read_int(PERSIST_KEY_TIME_ALIGN) : ALIGN_LEFT;
   s_settings.date_align  = persist_exists(PERSIST_KEY_DATE_ALIGN)
-                           ? persist_read_int(PERSIST_KEY_DATE_ALIGN)
-                           : ALIGN_RIGHT;
+                           ? persist_read_int(PERSIST_KEY_DATE_ALIGN) : ALIGN_RIGHT;
   s_settings.prefix      = persist_exists(PERSIST_KEY_PREFIX)
-                           ? persist_read_int(PERSIST_KEY_PREFIX)
-                           : PREFIX_NONE;
+                           ? persist_read_int(PERSIST_KEY_PREFIX) : PREFIX_NONE;
   s_settings.date_format = persist_exists(PERSIST_KEY_DATE_FORMAT)
-                           ? persist_read_int(PERSIST_KEY_DATE_FORMAT)
-                           : DATE_FORMAT_LONG;
+                           ? persist_read_int(PERSIST_KEY_DATE_FORMAT) : DATE_FORMAT_LONG_US;
+  s_settings.day_format  = persist_exists(PERSIST_KEY_DAY_FORMAT)
+                           ? persist_read_int(PERSIST_KEY_DAY_FORMAT) : DAY_FORMAT_LONG;
   s_settings.font_choice = persist_exists(PERSIST_KEY_FONT_CHOICE)
-                           ? persist_read_int(PERSIST_KEY_FONT_CHOICE)
-                           : FONT_BITHAM_42;
+                           ? persist_read_int(PERSIST_KEY_FONT_CHOICE) : FONT_BITHAM_42;
+  s_settings.time_case   = persist_exists(PERSIST_KEY_TIME_CASE)
+                           ? persist_read_int(PERSIST_KEY_TIME_CASE) : CASE_LOWER;
+  s_settings.date_case   = persist_exists(PERSIST_KEY_DATE_CASE)
+                           ? persist_read_int(PERSIST_KEY_DATE_CASE) : CASE_LOWER;
+  s_settings.day_case    = persist_exists(PERSIST_KEY_DAY_CASE)
+                           ? persist_read_int(PERSIST_KEY_DAY_CASE) : CASE_LOWER;
 }
 
 static void prv_save_settings(void) {
   persist_write_int(PERSIST_KEY_BG_COLOR,    s_settings.bg_color.argb);
-  persist_write_int(PERSIST_KEY_TIME_COLOR,  s_settings.time_color.argb);
+  persist_write_int(PERSIST_KEY_HOUR_COLOR,  s_settings.hour_color.argb);
+  persist_write_int(PERSIST_KEY_MIN_COLOR,   s_settings.min_color.argb);
   persist_write_int(PERSIST_KEY_DATE_COLOR,  s_settings.date_color.argb);
   persist_write_int(PERSIST_KEY_DAY_COLOR,   s_settings.day_color.argb);
   persist_write_int(PERSIST_KEY_TIME_ALIGN,  s_settings.time_align);
   persist_write_int(PERSIST_KEY_DATE_ALIGN,  s_settings.date_align);
   persist_write_int(PERSIST_KEY_PREFIX,      s_settings.prefix);
   persist_write_int(PERSIST_KEY_DATE_FORMAT, s_settings.date_format);
+  persist_write_int(PERSIST_KEY_DAY_FORMAT,  s_settings.day_format);
   persist_write_int(PERSIST_KEY_FONT_CHOICE, s_settings.font_choice);
+  persist_write_int(PERSIST_KEY_TIME_CASE,   s_settings.time_case);
+  persist_write_int(PERSIST_KEY_DATE_CASE,   s_settings.date_case);
+  persist_write_int(PERSIST_KEY_DAY_CASE,    s_settings.day_case);
 }
 
 // -------------------------------------------------------------------------
 // Font helpers
 // -------------------------------------------------------------------------
-static GFont prv_get_time_font_bold(void) {
+static GFont prv_get_font_bold(void) {
   switch (s_settings.font_choice) {
     case FONT_ROBOTO_49: return fonts_get_system_font(FONT_KEY_ROBOTO_BOLD_SUBSET_49);
-    case FONT_DROID_28:  return fonts_get_system_font(FONT_KEY_DROID_SERIF_28_BOLD);
-    case FONT_LECO_38:   return fonts_get_system_font(FONT_KEY_LECO_38_BOLD_NUMBERS);
-    case FONT_GOTHIC_28: return fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD);
+    case FONT_BITHAM_34: return fonts_get_system_font(FONT_KEY_BITHAM_34_MEDIUM_NUMBERS);
+    case FONT_GOTHIC_24: return fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD);
+    case FONT_BITHAM_30: return fonts_get_system_font(FONT_KEY_BITHAM_30_BLACK);
     default:             return fonts_get_system_font(FONT_KEY_BITHAM_42_BOLD);
   }
 }
 
-static GFont prv_get_time_font_light(void) {
+static GFont prv_get_font_light(void) {
   switch (s_settings.font_choice) {
     case FONT_ROBOTO_49: return fonts_get_system_font(FONT_KEY_ROBOTO_BOLD_SUBSET_49);
-    case FONT_DROID_28:  return fonts_get_system_font(FONT_KEY_DROID_SERIF_28_BOLD);
-    case FONT_LECO_38:   return fonts_get_system_font(FONT_KEY_LECO_38_BOLD_NUMBERS);
-    case FONT_GOTHIC_28: return fonts_get_system_font(FONT_KEY_GOTHIC_28);
+    case FONT_BITHAM_34: return fonts_get_system_font(FONT_KEY_BITHAM_34_MEDIUM_NUMBERS);
+    case FONT_GOTHIC_24: return fonts_get_system_font(FONT_KEY_GOTHIC_24);
+    case FONT_BITHAM_30: return fonts_get_system_font(FONT_KEY_BITHAM_30_BLACK);
     default:             return fonts_get_system_font(FONT_KEY_BITHAM_42_LIGHT);
   }
 }
 
-// Returns the height of a single time text line for the current font
 static int prv_line_height(void) {
   switch (s_settings.font_choice) {
     case FONT_ROBOTO_49: return 52;
-    case FONT_DROID_28:  return 34;
-    case FONT_LECO_38:   return 44;
-    case FONT_GOTHIC_28: return 34;
-    default:             return 50; // Bitham 42
+    case FONT_BITHAM_34: return 38;
+    case FONT_GOTHIC_24: return 30;
+    case FONT_BITHAM_30: return 34;
+    default:             return 50;
   }
 }
 
@@ -189,7 +247,6 @@ static GTextAlignment prv_galign(AlignOption a) {
 // -------------------------------------------------------------------------
 static void prv_destroy_property_animation(PropertyAnimation **prop_animation) {
   if (*prop_animation == NULL) return;
-  // Only unschedule if still running - do not call if already completed
   if (animation_is_scheduled((Animation*)*prop_animation)) {
     animation_unschedule((Animation*)*prop_animation);
     property_animation_destroy(*prop_animation);
@@ -264,59 +321,74 @@ static void prv_set_date(struct tm *tm) {
   memset(date_str, 0, sizeof(date_str));
   memset(day_str, 0, sizeof(day_str));
 
+  int day = tm->tm_mday;
+  const char *suffix;
+  if (day == 1 || day == 21 || day == 31)    suffix = "st";
+  else if (day == 2 || day == 22)             suffix = "nd";
+  else if (day == 3 || day == 23)             suffix = "rd";
+  else                                        suffix = "th";
+
   switch (s_settings.date_format) {
-    case DATE_FORMAT_LONG: {
-      int day = tm->tm_mday;
-      const char *suffix;
-      if (day == 1 || day == 21 || day == 31)      suffix = "st";
-      else if (day == 2 || day == 22)               suffix = "nd";
-      else if (day == 3 || day == 23)               suffix = "rd";
-      else                                          suffix = "th";
-      char month_str[16];
+    case DATE_FORMAT_LONG_US: {
+      char month_str[16], year_str[8];
       strftime(month_str, sizeof(month_str), "%B", tm);
-      char year_str[8];
       strftime(year_str, sizeof(year_str), "%Y", tm);
       snprintf(date_str, sizeof(date_str), "%s %d%s, %s", month_str, day, suffix, year_str);
-      strftime(day_str, sizeof(day_str), "%A", tm);
       break;
     }
-    case DATE_FORMAT_SHORT: {
-      int day = tm->tm_mday;
-      const char *suffix;
-      if (day == 1 || day == 21 || day == 31)      suffix = "st";
-      else if (day == 2 || day == 22)               suffix = "nd";
-      else if (day == 3 || day == 23)               suffix = "rd";
-      else                                          suffix = "th";
+    case DATE_FORMAT_SHORT_US: {
       char month_str[8];
       strftime(month_str, sizeof(month_str), "%b", tm);
       snprintf(date_str, sizeof(date_str), "%s %d%s", month_str, day, suffix);
-      strftime(day_str, sizeof(day_str), "%a", tm);
       break;
     }
-    case DATE_FORMAT_NUMERIC_MDY:
+    case DATE_FORMAT_LONG_EU: {
+      char month_str[16], year_str[8];
+      strftime(month_str, sizeof(month_str), "%B", tm);
+      strftime(year_str, sizeof(year_str), "%Y", tm);
+      snprintf(date_str, sizeof(date_str), "%d%s %s %s", day, suffix, month_str, year_str);
+      break;
+    }
+    case DATE_FORMAT_SHORT_EU: {
+      char month_str[8];
+      strftime(month_str, sizeof(month_str), "%b", tm);
+      snprintf(date_str, sizeof(date_str), "%d%s %s", day, suffix, month_str);
+      break;
+    }
+    case DATE_FORMAT_NUM_MDY:
       strftime(date_str, sizeof(date_str), "%m/%d/%Y", tm);
-      strftime(day_str, sizeof(day_str), "%a", tm);
       break;
-    case DATE_FORMAT_NUMERIC_DMY:
+    case DATE_FORMAT_NUM_DMY:
       strftime(date_str, sizeof(date_str), "%d/%m/%Y", tm);
-      strftime(day_str, sizeof(day_str), "%a", tm);
       break;
-    case DATE_FORMAT_NUMERIC_YMD:
+    case DATE_FORMAT_NUM_YMD:
       strftime(date_str, sizeof(date_str), "%Y/%m/%d", tm);
-      strftime(day_str, sizeof(day_str), "%a", tm);
-      break;
-    case DATE_FORMAT_DAY_ONLY:
-      date_str[0] = 0;
-      strftime(day_str, sizeof(day_str), "%A", tm);
       break;
   }
 
-  // Lowercase the first character
-  if (date_str[0]) date_str[0] = (char)tolower((unsigned char)date_str[0]);
-  if (day_str[0])  day_str[0]  = (char)tolower((unsigned char)day_str[0]);
+  // Day of week
+  switch (s_settings.day_format) {
+    case DAY_FORMAT_LONG:
+      strftime(day_str, sizeof(day_str), "%A", tm);
+      break;
+    case DAY_FORMAT_SHORT:
+      strftime(day_str, sizeof(day_str), "%a", tm);
+      break;
+    case DAY_FORMAT_NONE:
+    default:
+      day_str[0] = 0;
+      break;
+  }
+
+  // Apply case
+  apply_case(date_str, s_settings.date_case);
+  apply_case(day_str, s_settings.day_case);
 
   text_layer_set_text(s_date_layer, date_str);
   text_layer_set_text(s_day_layer, day_str);
+
+  // Show/hide day layer
+  layer_set_hidden((Layer*)s_day_layer, s_settings.day_format == DAY_FORMAT_NONE);
 }
 
 // -------------------------------------------------------------------------
@@ -325,6 +397,10 @@ static void prv_set_date(struct tm *tm) {
 static void prv_display_time(struct tm *t) {
   char l1[BUFFER_SIZE], l2[BUFFER_SIZE], l3[BUFFER_SIZE];
   time_to_3words(t->tm_hour, t->tm_min, l1, l2, l3, BUFFER_SIZE, s_settings.prefix);
+
+  apply_case(l1, s_settings.time_case);
+  apply_case(l2, s_settings.time_case);
+  apply_case(l3, s_settings.time_case);
 
   if (prv_needs_update(&s_line1, s_line1Str, l1)) prv_update_line(&s_line1, s_line1Str, l1);
   if (prv_needs_update(&s_line2, s_line2Str, l2)) prv_update_line(&s_line2, s_line2Str, l2);
@@ -335,6 +411,11 @@ static void prv_display_initial_time(struct tm *t) {
   time_to_3words(t->tm_hour, t->tm_min,
                  s_line1Str[0], s_line2Str[0], s_line3Str[0],
                  BUFFER_SIZE, s_settings.prefix);
+
+  apply_case(s_line1Str[0], s_settings.time_case);
+  apply_case(s_line2Str[0], s_settings.time_case);
+  apply_case(s_line3Str[0], s_settings.time_case);
+
   text_layer_set_text(s_line1.currentLayer, s_line1Str[0]);
   text_layer_set_text(s_line2.currentLayer, s_line2Str[0]);
   text_layer_set_text(s_line3.currentLayer, s_line3Str[0]);
@@ -342,25 +423,42 @@ static void prv_display_initial_time(struct tm *t) {
 }
 
 // -------------------------------------------------------------------------
-// Apply settings to all layers (called on init and after config update)
+// Apply settings to layers
 // -------------------------------------------------------------------------
-static void prv_configure_time_layer(TextLayer *tl, bool is_bold) {
-  text_layer_set_font(tl, is_bold ? prv_get_time_font_bold() : prv_get_time_font_light());
-  text_layer_set_text_color(tl, s_settings.time_color);
-  text_layer_set_background_color(tl, GColorClear);
-  text_layer_set_text_alignment(tl, prv_galign(s_settings.time_align));
-}
-
 static void prv_apply_settings(void) {
   window_set_background_color(s_window, s_settings.bg_color);
 
-  // Time layers
-  prv_configure_time_layer(s_line1.currentLayer, true);
-  prv_configure_time_layer(s_line1.nextLayer,    true);
-  prv_configure_time_layer(s_line2.currentLayer, false);
-  prv_configure_time_layer(s_line2.nextLayer,    false);
-  prv_configure_time_layer(s_line3.currentLayer, false);
-  prv_configure_time_layer(s_line3.nextLayer,    false);
+  GFont bold_font  = prv_get_font_bold();
+  GFont light_font = prv_get_font_light();
+  GTextAlignment time_align = prv_galign(s_settings.time_align);
+
+  // Line 1 = hour (bold font, hour color)
+  text_layer_set_font(s_line1.currentLayer, bold_font);
+  text_layer_set_font(s_line1.nextLayer,    bold_font);
+  text_layer_set_text_color(s_line1.currentLayer, s_settings.hour_color);
+  text_layer_set_text_color(s_line1.nextLayer,    s_settings.hour_color);
+  text_layer_set_background_color(s_line1.currentLayer, GColorClear);
+  text_layer_set_background_color(s_line1.nextLayer,    GColorClear);
+  text_layer_set_text_alignment(s_line1.currentLayer, time_align);
+  text_layer_set_text_alignment(s_line1.nextLayer,    time_align);
+
+  // Lines 2 & 3 = minutes (light font, minute color)
+  text_layer_set_font(s_line2.currentLayer, light_font);
+  text_layer_set_font(s_line2.nextLayer,    light_font);
+  text_layer_set_font(s_line3.currentLayer, light_font);
+  text_layer_set_font(s_line3.nextLayer,    light_font);
+  text_layer_set_text_color(s_line2.currentLayer, s_settings.min_color);
+  text_layer_set_text_color(s_line2.nextLayer,    s_settings.min_color);
+  text_layer_set_text_color(s_line3.currentLayer, s_settings.min_color);
+  text_layer_set_text_color(s_line3.nextLayer,    s_settings.min_color);
+  text_layer_set_background_color(s_line2.currentLayer, GColorClear);
+  text_layer_set_background_color(s_line2.nextLayer,    GColorClear);
+  text_layer_set_background_color(s_line3.currentLayer, GColorClear);
+  text_layer_set_background_color(s_line3.nextLayer,    GColorClear);
+  text_layer_set_text_alignment(s_line2.currentLayer, time_align);
+  text_layer_set_text_alignment(s_line2.nextLayer,    time_align);
+  text_layer_set_text_alignment(s_line3.currentLayer, time_align);
+  text_layer_set_text_alignment(s_line3.nextLayer,    time_align);
 
   // Date layers
   GTextAlignment date_align = prv_galign(s_settings.date_align);
@@ -369,30 +467,30 @@ static void prv_apply_settings(void) {
   text_layer_set_text_color(s_day_layer, s_settings.day_color);
   text_layer_set_text_alignment(s_day_layer, date_align);
 
-  // Reposition time lines for current font height
+  // Reposition time lines for current font
   int lh = prv_line_height();
-  int top_margin = (s_screen_h <= 168) ? 8 : 20; // more breathing room on taller screens
-
-  // For round screens, add horizontal inset to avoid clipping at edges
-  int inset = PBL_IF_ROUND_ELSE(12, 0);
+  int top_margin = (s_screen_h <= 168) ? 6 : 16;
+  int inset = PBL_IF_ROUND_ELSE(14, 0);
   int content_w = s_screen_w - (inset * 2);
 
-  layer_set_frame((Layer*)s_line1.currentLayer, GRect(inset, top_margin,               content_w, lh + 6));
-  layer_set_frame((Layer*)s_line1.nextLayer,    GRect(s_screen_w, top_margin,          content_w, lh + 6));
-  layer_set_frame((Layer*)s_line2.currentLayer, GRect(inset, top_margin + lh,          content_w, lh + 6));
-  layer_set_frame((Layer*)s_line2.nextLayer,    GRect(s_screen_w, top_margin + lh,     content_w, lh + 6));
-  layer_set_frame((Layer*)s_line3.currentLayer, GRect(inset, top_margin + (lh * 2),    content_w, lh + 6));
-  layer_set_frame((Layer*)s_line3.nextLayer,    GRect(s_screen_w, top_margin + (lh*2), content_w, lh + 6));
+  layer_set_frame((Layer*)s_line1.currentLayer, GRect(inset, top_margin,            content_w, lh + 8));
+  layer_set_frame((Layer*)s_line1.nextLayer,    GRect(s_screen_w, top_margin,       content_w, lh + 8));
+  layer_set_frame((Layer*)s_line2.currentLayer, GRect(inset, top_margin + lh,       content_w, lh + 8));
+  layer_set_frame((Layer*)s_line2.nextLayer,    GRect(s_screen_w, top_margin + lh,  content_w, lh + 8));
+  layer_set_frame((Layer*)s_line3.currentLayer, GRect(inset, top_margin + (lh * 2), content_w, lh + 8));
+  layer_set_frame((Layer*)s_line3.nextLayer,    GRect(s_screen_w, top_margin+(lh*2),content_w, lh + 8));
 
   // Date area: bottom of screen
-  int date_top = s_screen_h - 32;
+  // If day is hidden, give date a bit more room
+  bool day_hidden = (s_settings.day_format == DAY_FORMAT_NONE);
+  int date_top = day_hidden ? (s_screen_h - 20) : (s_screen_h - 32);
   int day_top  = s_screen_h - 48;
   layer_set_frame((Layer*)s_date_layer, GRect(inset, date_top, content_w, 20));
   layer_set_frame((Layer*)s_day_layer,  GRect(inset, day_top,  content_w, 20));
 }
 
 // -------------------------------------------------------------------------
-// AppMessage (config page communication)
+// AppMessage
 // -------------------------------------------------------------------------
 static void prv_inbox_received(DictionaryIterator *iter, void *context) {
   Tuple *t;
@@ -400,8 +498,11 @@ static void prv_inbox_received(DictionaryIterator *iter, void *context) {
   t = dict_find(iter, MSG_KEY_BG_COLOR);
   if (t) s_settings.bg_color = (GColor){ .argb = (uint8_t)t->value->int32 };
 
-  t = dict_find(iter, MSG_KEY_TIME_COLOR);
-  if (t) s_settings.time_color = (GColor){ .argb = (uint8_t)t->value->int32 };
+  t = dict_find(iter, MSG_KEY_HOUR_COLOR);
+  if (t) s_settings.hour_color = (GColor){ .argb = (uint8_t)t->value->int32 };
+
+  t = dict_find(iter, MSG_KEY_MIN_COLOR);
+  if (t) s_settings.min_color = (GColor){ .argb = (uint8_t)t->value->int32 };
 
   t = dict_find(iter, MSG_KEY_DATE_COLOR);
   if (t) s_settings.date_color = (GColor){ .argb = (uint8_t)t->value->int32 };
@@ -421,13 +522,24 @@ static void prv_inbox_received(DictionaryIterator *iter, void *context) {
   t = dict_find(iter, MSG_KEY_DATE_FORMAT);
   if (t) s_settings.date_format = (DateFormat)t->value->int32;
 
+  t = dict_find(iter, MSG_KEY_DAY_FORMAT);
+  if (t) s_settings.day_format = (DayFormat)t->value->int32;
+
   t = dict_find(iter, MSG_KEY_FONT_CHOICE);
   if (t) s_settings.font_choice = (FontChoice)t->value->int32;
+
+  t = dict_find(iter, MSG_KEY_TIME_CASE);
+  if (t) s_settings.time_case = (CaseOption)t->value->int32;
+
+  t = dict_find(iter, MSG_KEY_DATE_CASE);
+  if (t) s_settings.date_case = (CaseOption)t->value->int32;
+
+  t = dict_find(iter, MSG_KEY_DAY_CASE);
+  if (t) s_settings.day_case = (CaseOption)t->value->int32;
 
   prv_save_settings();
   prv_apply_settings();
 
-  // Refresh display with new settings
   time_t now = time(NULL);
   struct tm *tm_now = localtime(&now);
   prv_display_initial_time(tm_now);
@@ -455,13 +567,12 @@ static void prv_window_load(Window *window) {
   s_screen_w = layer_get_bounds(root).size.w;
   s_screen_h = layer_get_bounds(root).size.h;
 
-  // Create layers with placeholder frames — prv_apply_settings() will size them properly
-  s_line1.currentLayer = text_layer_create(GRect(0, 0, s_screen_w, 56));
-  s_line1.nextLayer    = text_layer_create(GRect(s_screen_w, 0, s_screen_w, 56));
-  s_line2.currentLayer = text_layer_create(GRect(0, 0, s_screen_w, 56));
-  s_line2.nextLayer    = text_layer_create(GRect(s_screen_w, 0, s_screen_w, 56));
-  s_line3.currentLayer = text_layer_create(GRect(0, 0, s_screen_w, 56));
-  s_line3.nextLayer    = text_layer_create(GRect(s_screen_w, 0, s_screen_w, 56));
+  s_line1.currentLayer = text_layer_create(GRect(0, 0, s_screen_w, 60));
+  s_line1.nextLayer    = text_layer_create(GRect(s_screen_w, 0, s_screen_w, 60));
+  s_line2.currentLayer = text_layer_create(GRect(0, 0, s_screen_w, 60));
+  s_line2.nextLayer    = text_layer_create(GRect(s_screen_w, 0, s_screen_w, 60));
+  s_line3.currentLayer = text_layer_create(GRect(0, 0, s_screen_w, 60));
+  s_line3.nextLayer    = text_layer_create(GRect(s_screen_w, 0, s_screen_w, 60));
 
   s_date_layer = text_layer_create(GRect(0, 0, s_screen_w, 20));
   text_layer_set_background_color(s_date_layer, GColorClear);
@@ -471,10 +582,8 @@ static void prv_window_load(Window *window) {
   text_layer_set_background_color(s_day_layer, GColorClear);
   text_layer_set_font(s_day_layer, fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD));
 
-  // Apply settings (colors, fonts, alignment, positions)
   prv_apply_settings();
 
-  // Add to window
   layer_add_child(root, (Layer*)s_line1.currentLayer);
   layer_add_child(root, (Layer*)s_line1.nextLayer);
   layer_add_child(root, (Layer*)s_line2.currentLayer);
@@ -484,7 +593,6 @@ static void prv_window_load(Window *window) {
   layer_add_child(root, (Layer*)s_date_layer);
   layer_add_child(root, (Layer*)s_day_layer);
 
-  // Show current time immediately
   time_t now = time(NULL);
   prv_display_initial_time(localtime(&now));
 }
@@ -520,7 +628,7 @@ int main(void) {
   });
   window_stack_push(s_window, true);
 
-  app_message_open(256, 256);
+  app_message_open(512, 64);
   app_message_register_inbox_received(prv_inbox_received);
   app_message_register_inbox_dropped(prv_inbox_dropped);
 

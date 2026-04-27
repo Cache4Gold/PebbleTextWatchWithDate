@@ -6,271 +6,132 @@
   <title>Text Watch Settings</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: #1a1a1a;
-      color: #f0f0f0;
-      padding: 0 0 40px 0;
+      background: #1a1a1a; color: #f0f0f0; padding: 0 0 40px 0;
     }
-
     header {
-      background: #111;
-      padding: 18px 20px;
-      border-bottom: 1px solid #333;
-      position: sticky;
-      top: 0;
-      z-index: 10;
+      background: #111; padding: 18px 20px;
+      border-bottom: 1px solid #333; position: sticky; top: 0; z-index: 10;
     }
-
-    header h1 {
-      font-size: 18px;
-      font-weight: 600;
-      letter-spacing: 0.5px;
-    }
-
-    .section {
-      margin: 20px 16px 0;
-    }
-
+    header h1 { font-size: 18px; font-weight: 600; letter-spacing: 0.5px; }
+    .section { margin: 20px 16px 0; }
     .section-title {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 1.2px;
-      text-transform: uppercase;
-      color: #888;
-      margin-bottom: 10px;
+      font-size: 11px; font-weight: 700; letter-spacing: 1.2px;
+      text-transform: uppercase; color: #888; margin-bottom: 10px;
     }
-
-    .card {
-      background: #252525;
-      border-radius: 12px;
-      overflow: hidden;
-    }
-
+    .card { background: #252525; border-radius: 12px; overflow: hidden; }
     .row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 14px 16px;
-      border-bottom: 1px solid #333;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 16px; border-bottom: 1px solid #333;
     }
-
-    .row:last-child {
-      border-bottom: none;
-    }
-
-    .row label {
-      font-size: 15px;
-      color: #f0f0f0;
-      flex: 1;
-    }
-
-    .row .hint {
-      font-size: 12px;
-      color: #888;
-      margin-top: 2px;
-    }
-
-    .row .label-wrap {
-      flex: 1;
-    }
-
+    .row:last-child { border-bottom: none; }
+    .row label { font-size: 15px; color: #f0f0f0; flex: 1; }
+    .row .hint { font-size: 12px; color: #888; margin-top: 2px; }
+    .row .label-wrap { flex: 1; }
     select {
-      background: #3a3a3a;
-      border: none;
-      border-radius: 8px;
-      color: #f0f0f0;
-      font-size: 14px;
-      padding: 6px 10px;
-      min-width: 130px;
-      -webkit-appearance: none;
-      appearance: none;
+      background: #3a3a3a; border: none; border-radius: 8px;
+      color: #f0f0f0; font-size: 14px; padding: 6px 10px; min-width: 130px;
+      -webkit-appearance: none; appearance: none;
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 10px center;
-      padding-right: 28px;
+      background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px;
     }
-
-    .color-wrap {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
+    .color-wrap { display: flex; align-items: center; gap: 8px; }
     .color-swatch {
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
-      border: 2px solid #555;
-      cursor: pointer;
-      display: block;
+      width: 32px; height: 32px; border-radius: 8px;
+      border: 2px solid #555; cursor: pointer; display: block;
     }
-
-    .color-label {
-      font-size: 13px;
-      color: #aaa;
-      min-width: 70px;
-      text-align: right;
-    }
-
-    /* Hidden color inputs */
-    input[type=color] {
-      position: absolute;
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
-
-    /* Pebble color picker grid */
+    .color-label { font-size: 13px; color: #aaa; min-width: 70px; text-align: right; }
     .color-picker-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.75);
-      z-index: 100;
-      align-items: center;
-      justify-content: center;
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.8); z-index: 100;
+      align-items: center; justify-content: center;
     }
-
-    .color-picker-overlay.active {
-      display: flex;
-    }
-
+    .color-picker-overlay.active { display: flex; }
     .color-picker-box {
-      background: #252525;
-      border-radius: 16px;
-      padding: 20px;
-      max-width: 320px;
-      width: 90%;
+      background: #252525; border-radius: 16px; padding: 20px;
+      max-width: 340px; width: 92%;
     }
-
-    .color-picker-box h2 {
-      font-size: 15px;
-      font-weight: 600;
-      margin-bottom: 16px;
-      text-align: center;
-    }
-
-    .color-grid {
-      display: grid;
-      grid-template-columns: repeat(8, 1fr);
-      gap: 5px;
-    }
-
+    .color-picker-box h2 { font-size: 15px; font-weight: 600; margin-bottom: 16px; text-align: center; }
+    .color-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; }
     .color-cell {
-      width: 100%;
-      aspect-ratio: 1;
-      border-radius: 5px;
-      cursor: pointer;
-      border: 2px solid transparent;
-      transition: transform 0.1s;
+      width: 100%; aspect-ratio: 1; border-radius: 5px; cursor: pointer;
+      border: 2px solid transparent; transition: transform 0.1s;
     }
-
-    .color-cell:hover {
-      transform: scale(1.15);
-      border-color: #fff;
-    }
-
-    .color-cell.selected {
-      border-color: #fff;
-      transform: scale(1.15);
-    }
-
+    .color-cell:hover { transform: scale(1.15); border-color: #fff; }
+    .color-cell.selected { border-color: #fff; transform: scale(1.15); }
     .picker-close {
-      margin-top: 16px;
-      width: 100%;
-      padding: 12px;
-      background: #3a3a3a;
-      border: none;
-      border-radius: 10px;
-      color: #f0f0f0;
-      font-size: 15px;
-      cursor: pointer;
+      margin-top: 16px; width: 100%; padding: 12px; background: #3a3a3a;
+      border: none; border-radius: 10px; color: #f0f0f0; font-size: 15px; cursor: pointer;
     }
-
     .save-btn {
-      display: block;
-      width: calc(100% - 32px);
-      margin: 24px 16px 0;
-      padding: 16px;
-      background: #007aff;
-      border: none;
-      border-radius: 12px;
-      color: #fff;
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
-      letter-spacing: 0.3px;
+      display: block; width: calc(100% - 32px); margin: 24px 16px 0;
+      padding: 16px; background: #007aff; border: none; border-radius: 12px;
+      color: #fff; font-size: 16px; font-weight: 600; cursor: pointer;
     }
-
-    .save-btn:active {
-      background: #005ec4;
-    }
+    .save-btn:active { background: #005ec4; }
   </style>
 </head>
 <body>
 
-<header>
-  <h1>Text Watch Settings</h1>
-</header>
+<header><h1>Text Watch Settings</h1></header>
 
-<!-- APPEARANCE -->
+<!-- COLORS -->
 <div class="section">
-  <div class="section-title">Appearance</div>
+  <div class="section-title">Colors</div>
   <div class="card">
-
     <div class="row">
-      <div class="label-wrap">
-        <label>Background</label>
-      </div>
+      <label>Background</label>
       <div class="color-wrap">
         <span class="color-label" id="bg-hex">#000000</span>
         <span class="color-swatch" id="bg-swatch" onclick="openPicker('bg')"></span>
       </div>
     </div>
-
     <div class="row">
-      <div class="label-wrap">
-        <label>Time text</label>
-      </div>
+      <label>Hour text</label>
       <div class="color-wrap">
-        <span class="color-label" id="time-hex">#ffffff</span>
-        <span class="color-swatch" id="time-swatch" onclick="openPicker('time')"></span>
+        <span class="color-label" id="hour-hex">#FFFFFF</span>
+        <span class="color-swatch" id="hour-swatch" onclick="openPicker('hour')"></span>
       </div>
     </div>
-
     <div class="row">
-      <div class="label-wrap">
-        <label>Day of week</label>
-      </div>
+      <label>Minute text</label>
       <div class="color-wrap">
-        <span class="color-label" id="day-hex">#ffffff</span>
+        <span class="color-label" id="min-hex">#FFFFFF</span>
+        <span class="color-swatch" id="min-swatch" onclick="openPicker('min')"></span>
+      </div>
+    </div>
+    <div class="row">
+      <label>Day of week</label>
+      <div class="color-wrap">
+        <span class="color-label" id="day-hex">#FFFFFF</span>
         <span class="color-swatch" id="day-swatch" onclick="openPicker('day')"></span>
       </div>
     </div>
-
     <div class="row">
-      <div class="label-wrap">
-        <label>Date text</label>
-      </div>
+      <label>Date text</label>
       <div class="color-wrap">
-        <span class="color-label" id="date-hex">#ffffff</span>
+        <span class="color-label" id="date-hex">#FFFFFF</span>
         <span class="color-swatch" id="date-swatch" onclick="openPicker('date')"></span>
       </div>
     </div>
+  </div>
+</div>
 
+<!-- FONT -->
+<div class="section">
+  <div class="section-title">Font</div>
+  <div class="card">
     <div class="row">
-      <label>Font</label>
+      <label>Typeface</label>
       <select id="font-choice">
         <option value="0">Bitham 42 (classic)</option>
         <option value="1">Roboto 49 (modern)</option>
-        <option value="2">Droid Serif 28</option>
-        <option value="3">LECO 38 (geometric)</option>
-        <option value="4">Gothic 28</option>
+        <option value="2">Bitham 34 (medium)</option>
+        <option value="3">Gothic 24 (compact)</option>
+        <option value="4">Bitham 30 (black)</option>
       </select>
     </div>
-
   </div>
 </div>
 
@@ -278,7 +139,6 @@
 <div class="section">
   <div class="section-title">Layout</div>
   <div class="card">
-
     <div class="row">
       <label>Time alignment</label>
       <select id="time-align">
@@ -287,7 +147,6 @@
         <option value="2">Right</option>
       </select>
     </div>
-
     <div class="row">
       <label>Date alignment</label>
       <select id="date-align">
@@ -296,7 +155,37 @@
         <option value="2" selected>Right</option>
       </select>
     </div>
+  </div>
+</div>
 
+<!-- CASE -->
+<div class="section">
+  <div class="section-title">Text Case</div>
+  <div class="card">
+    <div class="row">
+      <label>Time</label>
+      <select id="time-case">
+        <option value="0">lowercase</option>
+        <option value="1">UPPERCASE</option>
+        <option value="2">Proper Case</option>
+      </select>
+    </div>
+    <div class="row">
+      <label>Day of week</label>
+      <select id="day-case">
+        <option value="0">lowercase</option>
+        <option value="1">UPPERCASE</option>
+        <option value="2">Proper Case</option>
+      </select>
+    </div>
+    <div class="row">
+      <label>Date</label>
+      <select id="date-case">
+        <option value="0">lowercase</option>
+        <option value="1">UPPERCASE</option>
+        <option value="2">Proper Case</option>
+      </select>
+    </div>
   </div>
 </div>
 
@@ -304,19 +193,32 @@
 <div class="section">
   <div class="section-title">Time Format</div>
   <div class="card">
-
     <div class="row">
       <div class="label-wrap">
         <label>Minute prefix</label>
-        <div class="hint">e.g. "five oh one" / "five o' one"</div>
+        <div class="hint">For single-digit minutes (e.g. 5:04)</div>
       </div>
       <select id="prefix">
-        <option value="0">None</option>
-        <option value="1">oh</option>
-        <option value="2">o'</option>
+        <option value="0">None — "four"</option>
+        <option value="1">oh — "oh four"</option>
+        <option value="2">o' — "o' four"</option>
       </select>
     </div>
+  </div>
+</div>
 
+<!-- DAY FORMAT -->
+<div class="section">
+  <div class="section-title">Day of Week</div>
+  <div class="card">
+    <div class="row">
+      <label>Format</label>
+      <select id="day-format">
+        <option value="0">Long (monday)</option>
+        <option value="1">Short (mon)</option>
+        <option value="2">Hidden</option>
+      </select>
+    </div>
   </div>
 </div>
 
@@ -324,29 +226,27 @@
 <div class="section">
   <div class="section-title">Date Format</div>
   <div class="card">
-
     <div class="row">
       <div class="label-wrap">
         <label>Format</label>
-        <div class="hint" id="date-format-hint">e.g. wednesday / september 25th, 2024</div>
+        <div class="hint" id="date-hint">e.g. april 27th, 2026</div>
       </div>
       <select id="date-format" onchange="updateDateHint()">
-        <option value="0">Long (Month DDth, YYYY)</option>
-        <option value="1">Short (Mon DDth)</option>
-        <option value="2">Numeric M/D/Y</option>
-        <option value="3">Numeric D/M/Y</option>
-        <option value="4">Numeric Y/M/D</option>
-        <option value="5">Day only</option>
+        <option value="0">US Long — Month DDth, YYYY</option>
+        <option value="1">US Short — Mon DDth</option>
+        <option value="2">EU Long — DDth Month YYYY</option>
+        <option value="3">EU Short — DDth Mon</option>
+        <option value="4">Numeric M/D/Y</option>
+        <option value="5">Numeric D/M/Y</option>
+        <option value="6">Numeric Y/M/D</option>
       </select>
     </div>
-
   </div>
 </div>
 
-<!-- SAVE -->
 <button class="save-btn" onclick="saveAndClose()">Save &amp; Close</button>
 
-<!-- COLOR PICKER OVERLAY -->
+<!-- COLOR PICKER -->
 <div class="color-picker-overlay" id="picker-overlay">
   <div class="color-picker-box">
     <h2 id="picker-title">Choose a color</h2>
@@ -356,184 +256,180 @@
 </div>
 
 <script>
-  // Pebble 64-color palette (6-bit ARGB)
-  // Each entry: [hex string, argb byte value]
-  const PEBBLE_COLORS = [
-    ["#000000", 0b11000000], ["#001500", 0b11000001], ["#002B00", 0b11000010], ["#004000", 0b11000011],
-    ["#005500", 0b11000100], ["#006A00", 0b11000101], ["#008000", 0b11000110], ["#009500", 0b11000111],
-    ["#00AA00", 0b11001000], ["#00BF00", 0b11001001], ["#00D500", 0b11001010], ["#00EA00", 0b11001011],
-    ["#00FF00", 0b11001100], ["#00FF15", 0b11001101], ["#00FF2A", 0b11001110], ["#00FF40", 0b11001111],
-    ["#000055", 0b11010000], ["#001555", 0b11010001], ["#002B55", 0b11010010], ["#004055", 0b11010011],
-    ["#005555", 0b11010100], ["#006A55", 0b11010101], ["#008055", 0b11010110], ["#009555", 0b11010111],
-    ["#00AA55", 0b11011000], ["#00BF55", 0b11011001], ["#00D555", 0b11011010], ["#00EA55", 0b11011011],
-    ["#00FF55", 0b11011100], ["#00FF6A", 0b11011101], ["#00FF80", 0b11011110], ["#00FF95", 0b11011111],
-    ["#0000AA", 0b11100000], ["#0015AA", 0b11100001], ["#002BAA", 0b11100010], ["#0040AA", 0b11100011],
-    ["#0055AA", 0b11100100], ["#006AAA", 0b11100101], ["#0080AA", 0b11100110], ["#0095AA", 0b11100111],
-    ["#00AAAA", 0b11101000], ["#00BFAA", 0b11101001], ["#00D5AA", 0b11101010], ["#00EAAA", 0b11101011],
-    ["#00FFAA", 0b11101100], ["#00FFBF", 0b11101101], ["#00FFD5", 0b11101110], ["#00FFEA", 0b11101111],
-    ["#0000FF", 0b11110000], ["#0015FF", 0b11110001], ["#002BFF", 0b11110010], ["#0040FF", 0b11110011],
-    ["#0055FF", 0b11110100], ["#006AFF", 0b11110101], ["#0080FF", 0b11110110], ["#0095FF", 0b11110111],
-    ["#00AAFF", 0b11111000], ["#00BFFF", 0b11111001], ["#00D5FF", 0b11111010], ["#00EAFF", 0b11111011],
-    ["#00FFFF", 0b11111100], ["#FFFFFF", 0b11111111], ["#AAAAAA", 0b11101010], ["#555555", 0b11010101],
-  ];
+// Complete Pebble 64-color palette
+// Each entry: [displayHex, argbByte]
+// argb byte: 0b11RRGGBB where R/G/B are 2-bit (0-3)
+const PALETTE = [
+  ["#000000", 0b11000000], ["#550000", 0b11000100], ["#AA0000", 0b11001000], ["#FF0000", 0b11001100],
+  ["#000055", 0b11010000], ["#550055", 0b11010100], ["#AA0055", 0b11011000], ["#FF0055", 0b11011100],
+  ["#0000AA", 0b11100000], ["#5500AA", 0b11100100], ["#AA00AA", 0b11101000], ["#FF00AA", 0b11101100],
+  ["#0000FF", 0b11110000], ["#5500FF", 0b11110100], ["#AA00FF", 0b11111000], ["#FF00FF", 0b11111100],
+  ["#005500", 0b11000001], ["#555500", 0b11000101], ["#AA5500", 0b11001001], ["#FF5500", 0b11001101],
+  ["#005555", 0b11010001], ["#555555", 0b11010101], ["#AA5555", 0b11011001], ["#FF5555", 0b11011101],
+  ["#0055AA", 0b11100001], ["#5555AA", 0b11100101], ["#AA55AA", 0b11101001], ["#FF55AA", 0b11101101],
+  ["#0055FF", 0b11110001], ["#5555FF", 0b11110101], ["#AA55FF", 0b11111001], ["#FF55FF", 0b11111101],
+  ["#00AA00", 0b11000010], ["#55AA00", 0b11000110], ["#AAAA00", 0b11001010], ["#FFAA00", 0b11001110],
+  ["#00AA55", 0b11010010], ["#55AA55", 0b11010110], ["#AAAA55", 0b11011010], ["#FFAA55", 0b11011110],
+  ["#00AAAA", 0b11100010], ["#55AAAA", 0b11100110], ["#AAAAAA", 0b11101010], ["#FFAAAA", 0b11101110],
+  ["#00AAFF", 0b11110010], ["#55AAFF", 0b11110110], ["#AAAAFF", 0b11111010], ["#FFAAFF", 0b11111110],
+  ["#00FF00", 0b11000011], ["#55FF00", 0b11000111], ["#AAFF00", 0b11001011], ["#FFFF00", 0b11001111],
+  ["#00FF55", 0b11010011], ["#55FF55", 0b11010111], ["#AAFF55", 0b11011011], ["#FFFF55", 0b11011111],
+  ["#00FFAA", 0b11100011], ["#55FFAA", 0b11100111], ["#AAFFAA", 0b11101011], ["#FFFFAA", 0b11101111],
+  ["#00FFFF", 0b11110011], ["#55FFFF", 0b11110111], ["#AAFFFF", 0b11111011], ["#FFFFFF", 0b11111111],
+];
 
-  // Sensible defaults
-  let config = {
-    bg_color:    0b11000000, // black
-    time_color:  0b11111111, // white
-    date_color:  0b11111111,
-    day_color:   0b11111111,
-    time_align:  0,
-    date_align:  2,
-    prefix:      0,
-    date_format: 0,
-    font_choice: 0,
+function argbToHex(argb) {
+  const r = ((argb >> 4) & 0x3) * 85;
+  const g = ((argb >> 2) & 0x3) * 85;
+  const b = (argb & 0x3) * 85;
+  return '#' + [r,g,b].map(v => v.toString(16).padStart(2,'0')).join('').toUpperCase();
+}
+
+function hexToArgb(hex) {
+  const r = parseInt(hex.slice(1,3), 16);
+  const g = parseInt(hex.slice(3,5), 16);
+  const b = parseInt(hex.slice(5,7), 16);
+  let best = PALETTE[0], bestDist = Infinity;
+  for (const [ph, pa] of PALETTE) {
+    const pr = parseInt(ph.slice(1,3),16);
+    const pg = parseInt(ph.slice(3,5),16);
+    const pb = parseInt(ph.slice(5,7),16);
+    const d = Math.abs(r-pr) + Math.abs(g-pg) + Math.abs(b-pb);
+    if (d < bestDist) { bestDist = d; best = [ph, pa]; }
+  }
+  return best;
+}
+
+let config = {
+  bg_color:    0b11000000,
+  hour_color:  0b11111111,
+  min_color:   0b11111111,
+  date_color:  0b11111111,
+  day_color:   0b11111111,
+  time_align:  0,
+  date_align:  2,
+  prefix:      0,
+  date_format: 0,
+  day_format:  0,
+  font_choice: 0,
+  time_case:   0,
+  date_case:   0,
+  day_case:    0,
+};
+
+let currentTarget = null;
+
+function loadConfig() {
+  try {
+    const params = new URLSearchParams(location.search);
+    const saved = params.get('config');
+    if (saved) Object.assign(config, JSON.parse(decodeURIComponent(saved)));
+  } catch(e) {}
+}
+
+function updateSwatch(id, argb) {
+  const hex = argbToHex(argb);
+  document.getElementById(id + '-swatch').style.background = hex;
+  document.getElementById(id + '-hex').textContent = '#' + hex.slice(1).toUpperCase();
+}
+
+function initUI() {
+  loadConfig();
+  ['bg','hour','min','date','day'].forEach(id => updateSwatch(id, config[id + '_color']));
+  document.getElementById('font-choice').value  = config.font_choice;
+  document.getElementById('time-align').value   = config.time_align;
+  document.getElementById('date-align').value   = config.date_align;
+  document.getElementById('time-case').value    = config.time_case;
+  document.getElementById('date-case').value    = config.date_case;
+  document.getElementById('day-case').value     = config.day_case;
+  document.getElementById('prefix').value       = config.prefix;
+  document.getElementById('day-format').value   = config.day_format;
+  document.getElementById('date-format').value  = config.date_format;
+  updateDateHint();
+}
+
+function buildGrid(selectedArgb) {
+  const grid = document.getElementById('color-grid');
+  grid.innerHTML = '';
+  for (const [hex, argb] of PALETTE) {
+    const cell = document.createElement('div');
+    cell.className = 'color-cell' + (argb === selectedArgb ? ' selected' : '');
+    cell.style.background = hex;
+    cell.onclick = () => selectColor(argb, cell);
+    grid.appendChild(cell);
+  }
+}
+
+function openPicker(target) {
+  currentTarget = target;
+  const titles = {
+    bg: 'Background Color', hour: 'Hour Text Color', min: 'Minute Text Color',
+    date: 'Date Text Color', day: 'Day Text Color'
+  };
+  document.getElementById('picker-title').textContent = titles[target] || 'Choose a color';
+  buildGrid(config[target + '_color']);
+  document.getElementById('picker-overlay').classList.add('active');
+}
+
+function selectColor(argb, cell) {
+  config[currentTarget + '_color'] = argb;
+  updateSwatch(currentTarget, argb);
+  document.querySelectorAll('.color-cell').forEach(c => c.classList.remove('selected'));
+  cell.classList.add('selected');
+}
+
+function closePicker() {
+  document.getElementById('picker-overlay').classList.remove('active');
+  currentTarget = null;
+}
+
+const DATE_HINTS = [
+  "e.g. april 27th, 2026",
+  "e.g. apr 27th",
+  "e.g. 27th april 2026",
+  "e.g. 27th apr",
+  "e.g. 04/27/2026",
+  "e.g. 27/04/2026",
+  "e.g. 2026/04/27",
+];
+
+function updateDateHint() {
+  const val = parseInt(document.getElementById('date-format').value);
+  document.getElementById('date-hint').textContent = DATE_HINTS[val] || '';
+}
+
+function saveAndClose() {
+  config.font_choice  = parseInt(document.getElementById('font-choice').value);
+  config.time_align   = parseInt(document.getElementById('time-align').value);
+  config.date_align   = parseInt(document.getElementById('date-align').value);
+  config.time_case    = parseInt(document.getElementById('time-case').value);
+  config.date_case    = parseInt(document.getElementById('date-case').value);
+  config.day_case     = parseInt(document.getElementById('day-case').value);
+  config.prefix       = parseInt(document.getElementById('prefix').value);
+  config.day_format   = parseInt(document.getElementById('day-format').value);
+  config.date_format  = parseInt(document.getElementById('date-format').value);
+
+  const payload = {
+    bg_color:    config.bg_color,
+    hour_color:  config.hour_color,
+    min_color:   config.min_color,
+    date_color:  config.date_color,
+    day_color:   config.day_color,
+    time_align:  config.time_align,
+    date_align:  config.date_align,
+    prefix:      config.prefix,
+    date_format: config.date_format,
+    day_format:  config.day_format,
+    font_choice: config.font_choice,
+    time_case:   config.time_case,
+    date_case:   config.date_case,
+    day_case:    config.day_case,
   };
 
-  let currentPickerTarget = null;
+  location.href = 'pebblejs://close#' + encodeURIComponent(JSON.stringify(payload));
+}
 
-  // Try to load existing config from URL
-  function loadConfig() {
-    try {
-      const search = location.search;
-      if (!search) return;
-      const params = new URLSearchParams(search);
-      const saved = params.get('config');
-      if (saved) {
-        const parsed = JSON.parse(decodeURIComponent(saved));
-        Object.assign(config, parsed);
-      }
-    } catch(e) {}
-  }
-
-  function argbToHex(argb) {
-    const r = ((argb >> 4) & 0x3) * 85;
-    const g = ((argb >> 2) & 0x3) * 85;
-    const b = (argb & 0x3) * 85;
-    return '#' + [r,g,b].map(v => v.toString(16).padStart(2,'0')).join('');
-  }
-
-  function hexToClosestArgb(hex) {
-    const r = parseInt(hex.slice(1,3), 16);
-    const g = parseInt(hex.slice(3,5), 16);
-    const b = parseInt(hex.slice(5,7), 16);
-    let best = PEBBLE_COLORS[0];
-    let bestDist = Infinity;
-    for (const [ch, ca] of PEBBLE_COLORS) {
-      const cr = parseInt(ch.slice(1,3), 16);
-      const cg = parseInt(ch.slice(3,5), 16);
-      const cb = parseInt(ch.slice(5,7), 16);
-      const dist = Math.abs(r-cr) + Math.abs(g-cg) + Math.abs(b-cb);
-      if (dist < bestDist) { bestDist = dist; best = [ch, ca]; }
-    }
-    return best;
-  }
-
-  function updateSwatch(id, argb) {
-    const hex = argbToHex(argb);
-    document.getElementById(id + '-swatch').style.background = hex;
-    document.getElementById(id + '-hex').textContent = hex.toUpperCase();
-  }
-
-  function initUI() {
-    loadConfig();
-    updateSwatch('bg',   config.bg_color);
-    updateSwatch('time', config.time_color);
-    updateSwatch('date', config.date_color);
-    updateSwatch('day',  config.day_color);
-    document.getElementById('time-align').value  = config.time_align;
-    document.getElementById('date-align').value  = config.date_align;
-    document.getElementById('prefix').value      = config.prefix;
-    document.getElementById('date-format').value = config.date_format;
-    document.getElementById('font-choice').value = config.font_choice;
-    updateDateHint();
-  }
-
-  // Color picker
-  function buildGrid(selectedArgb) {
-    const grid = document.getElementById('color-grid');
-    grid.innerHTML = '';
-    for (const [hex, argb] of PEBBLE_COLORS) {
-      const cell = document.createElement('div');
-      cell.className = 'color-cell' + (argb === selectedArgb ? ' selected' : '');
-      cell.style.background = hex;
-      cell.onclick = () => selectColor(argb, hex);
-      grid.appendChild(cell);
-    }
-  }
-
-  function openPicker(target) {
-    currentPickerTarget = target;
-    const titles = { bg: 'Background Color', time: 'Time Text Color', date: 'Date Text Color', day: 'Day Text Color' };
-    document.getElementById('picker-title').textContent = titles[target] || 'Choose a color';
-    const currentArgb = config[target + '_color'];
-    buildGrid(currentArgb);
-    document.getElementById('picker-overlay').classList.add('active');
-  }
-
-  function selectColor(argb, hex) {
-    config[currentPickerTarget + '_color'] = argb;
-    updateSwatch(currentPickerTarget, argb);
-    // Update grid selection
-    document.querySelectorAll('.color-cell').forEach(cell => {
-      cell.classList.toggle('selected', cell.style.background === hex || 
-        cell.style.background === hexToRgb(hex));
-    });
-  }
-
-  function hexToRgb(hex) {
-    const r = parseInt(hex.slice(1,3),16);
-    const g = parseInt(hex.slice(3,5),16);
-    const b = parseInt(hex.slice(5,7),16);
-    return `rgb(${r}, ${g}, ${b})`;
-  }
-
-  function closePicker() {
-    document.getElementById('picker-overlay').classList.remove('active');
-    currentPickerTarget = null;
-  }
-
-  const DATE_HINTS = [
-    "e.g. wednesday / september 25th, 2024",
-    "e.g. wed / sep 25th",
-    "e.g. wed / 9/25/2024",
-    "e.g. wed / 25/9/2024",
-    "e.g. wed / 2024/9/25",
-    "Day name only, no date",
-  ];
-
-  function updateDateHint() {
-    const val = parseInt(document.getElementById('date-format').value);
-    document.getElementById('date-format-hint').textContent = DATE_HINTS[val] || '';
-  }
-
-  function saveAndClose() {
-    config.time_align  = parseInt(document.getElementById('time-align').value);
-    config.date_align  = parseInt(document.getElementById('date-align').value);
-    config.prefix      = parseInt(document.getElementById('prefix').value);
-    config.date_format = parseInt(document.getElementById('date-format').value);
-    config.font_choice = parseInt(document.getElementById('font-choice').value);
-
-    const payload = {
-      bg_color:    config.bg_color,
-      time_color:  config.time_color,
-      date_color:  config.date_color,
-      day_color:   config.day_color,
-      time_align:  config.time_align,
-      date_align:  config.date_align,
-      prefix:      config.prefix,
-      date_format: config.date_format,
-      font_choice: config.font_choice,
-    };
-
-    const encoded = encodeURIComponent(JSON.stringify(payload));
-
-    // Always use pebblejs://close# — works inside Pebble app webview.
-    // In a regular browser this just navigates away, which is fine.
-    location.href = 'pebblejs://close#' + encoded;
-  }
-
-  initUI();
+initUI();
 </script>
 </body>
 </html>

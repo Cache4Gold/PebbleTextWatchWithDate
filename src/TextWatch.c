@@ -69,13 +69,8 @@ typedef enum {
   DAY_FORMAT_NONE  = 2,  // hidden
 } DayFormat;
 
-typedef enum {
-  FONT_BITHAM_42_BOLDLIGHT = 0,  // Bold hour, Light minutes
-  FONT_BITHAM_30_BLACK     = 1,  // Bitham 30 Black (chunky)
-  FONT_GOTHIC_28_BOLD      = 2,  // Gothic 28 Bold
-  FONT_GOTHIC_28           = 3,  // Gothic 28 Regular
-  FONT_DROID_SERIF_28      = 4,  // Droid Serif 28 Bold
-} FontChoice;
+// Font is fixed as Bitham 42 Bold/Light
+// (other fonts removed as they lack the bold/light distinction)
 
 typedef enum {
   CASE_LOWER  = 0,
@@ -97,7 +92,6 @@ typedef struct {
   MinutePrefix prefix;
   DateFormat  date_format;
   DayFormat   day_format;
-  FontChoice  font_choice;
   CaseOption  time_case;
   CaseOption  hour_case;
   CaseOption  min_case;
@@ -179,8 +173,7 @@ static void prv_load_settings(void) {
                            ? persist_read_int(PERSIST_KEY_DATE_FORMAT) : DATE_FORMAT_LONG_US;
   s_settings.day_format  = persist_exists(PERSIST_KEY_DAY_FORMAT)
                            ? persist_read_int(PERSIST_KEY_DAY_FORMAT) : DAY_FORMAT_LONG;
-  s_settings.font_choice = persist_exists(PERSIST_KEY_FONT_CHOICE)
-                           ? persist_read_int(PERSIST_KEY_FONT_CHOICE) : FONT_BITHAM_42_BOLDLIGHT;
+
   s_settings.time_case   = persist_exists(PERSIST_KEY_TIME_CASE)
                            ? persist_read_int(PERSIST_KEY_TIME_CASE) : CASE_LOWER;
   s_settings.hour_case   = persist_exists(PERSIST_KEY_HOUR_CASE)
@@ -204,7 +197,6 @@ static void prv_save_settings(void) {
   persist_write_int(PERSIST_KEY_PREFIX,      s_settings.prefix);
   persist_write_int(PERSIST_KEY_DATE_FORMAT, s_settings.date_format);
   persist_write_int(PERSIST_KEY_DAY_FORMAT,  s_settings.day_format);
-  persist_write_int(PERSIST_KEY_FONT_CHOICE, s_settings.font_choice);
   persist_write_int(PERSIST_KEY_TIME_CASE,   s_settings.time_case);
   persist_write_int(PERSIST_KEY_HOUR_CASE,   s_settings.hour_case);
   persist_write_int(PERSIST_KEY_MIN_CASE,    s_settings.min_case);
@@ -216,33 +208,15 @@ static void prv_save_settings(void) {
 // Font helpers
 // -------------------------------------------------------------------------
 static GFont prv_get_font_bold(void) {
-  switch (s_settings.font_choice) {
-    case FONT_BITHAM_30_BLACK:  return fonts_get_system_font(FONT_KEY_BITHAM_30_BLACK);
-    case FONT_GOTHIC_28_BOLD:   return fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD);
-    case FONT_GOTHIC_28:        return fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD);
-    case FONT_DROID_SERIF_28:   return fonts_get_system_font(FONT_KEY_DROID_SERIF_28_BOLD);
-    default:                    return fonts_get_system_font(FONT_KEY_BITHAM_42_BOLD);
-  }
+  return fonts_get_system_font(FONT_KEY_BITHAM_42_BOLD);
 }
 
 static GFont prv_get_font_light(void) {
-  switch (s_settings.font_choice) {
-    case FONT_BITHAM_30_BLACK:  return fonts_get_system_font(FONT_KEY_BITHAM_30_BLACK);
-    case FONT_GOTHIC_28_BOLD:   return fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD);
-    case FONT_GOTHIC_28:        return fonts_get_system_font(FONT_KEY_GOTHIC_28);
-    case FONT_DROID_SERIF_28:   return fonts_get_system_font(FONT_KEY_DROID_SERIF_28_BOLD);
-    default:                    return fonts_get_system_font(FONT_KEY_BITHAM_42_LIGHT);
-  }
+  return fonts_get_system_font(FONT_KEY_BITHAM_42_LIGHT);
 }
 
 static int prv_line_height(void) {
-  switch (s_settings.font_choice) {
-    case FONT_BITHAM_30_BLACK: return 36;
-    case FONT_GOTHIC_28_BOLD:  return 34;
-    case FONT_GOTHIC_28:       return 34;
-    case FONT_DROID_SERIF_28:  return 34;
-    default:                   return 50; // Bitham 42
-  }
+  return 50; // Bitham 42
 }
 
 // -------------------------------------------------------------------------
@@ -549,9 +523,6 @@ static void prv_inbox_received(DictionaryIterator *iter, void *context) {
 
   t = dict_find(iter, MSG_KEY_DAY_FORMAT);
   if (t) s_settings.day_format = (DayFormat)t->value->int32;
-
-  t = dict_find(iter, MSG_KEY_FONT_CHOICE);
-  if (t) s_settings.font_choice = (FontChoice)t->value->int32;
 
   t = dict_find(iter, MSG_KEY_TIME_CASE);
   if (t) s_settings.time_case = (CaseOption)t->value->int32;

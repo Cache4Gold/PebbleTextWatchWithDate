@@ -48,20 +48,7 @@
   </div>
 </div>
 
-<div class="section">
-  <div class="section-title">Font</div>
-  <div class="card">
-    <div class="row"><label>Typeface</label>
-      <select id="font-choice">
-        <option value="0">Bitham 42 Bold/Light (classic)</option>
-        <option value="1">Bitham 30 Black (chunky)</option>
-        <option value="2">Gothic 28 Bold</option>
-        <option value="3">Gothic 28 Regular</option>
-        <option value="4">Droid Serif 28 Bold</option>
-      </select>
-    </div>
-  </div>
-</div>
+
 
 <div class="section">
   <div class="section-title">Layout</div>
@@ -131,35 +118,38 @@
 <script>
 // Correct Pebble 64-color palette: 0b11RRGGBB, R/G/B each 0-3 (0=0x00,1=0x55,2=0xAA,3=0xFF)
 const PALETTE = [
-  // Grayscale
-  ["#000000",0xC0],["#555555",0xD5],["#AAAAAA",0xEA],["#FFFFFF",0xFF],
-  // Near-white tints
-  ["#FFAAAA",0xFA],["#AAFFAA",0xEE],["#AAAAFF",0xEB],["#FFFFAA",0xFE],
+  // Grays
+  ["#000000",0xC0], ["#555555",0xD5], ["#AAAAAA",0xEA], ["#FFFFFF",0xFF],
   // Reds
-  ["#550000",0xD0],["#AA0000",0xE0],["#FF0000",0xF0],["#FF5555",0xF5],
-  // Oranges / browns
-  ["#AA5500",0xE4],["#FF5500",0xF4],["#FFAA00",0xF8],["#FFAA55",0xF9],
+  ["#550000",0xD0], ["#AA0000",0xE0], ["#FF0000",0xF0], ["#FF5555",0xF5],
+  // Oranges
+  ["#FF5500",0xF4], ["#AA5500",0xE4], ["#FFAA00",0xF8], ["#FFAA55",0xF9],
   // Yellows
-  ["#555500",0xD4],["#AAAA00",0xE8],["#FFFF00",0xFC],["#FFFF55",0xFD],
+  ["#555500",0xD4], ["#AAAA00",0xE8], ["#FFFF00",0xFC], ["#FFFF55",0xFD],
   // Yellow-greens
-  ["#55AA00",0xD8],["#AAFF00",0xEC],["#55FF00",0xDC],["#AAFF55",0xED],
+  ["#AAAA55",0xE9], ["#FFFFAA",0xFE], ["#AAFF00",0xEC], ["#55AA00",0xD8],
   // Greens
-  ["#005500",0xC4],["#00AA00",0xC8],["#00FF00",0xCC],["#55FF55",0xDD],
-  // Teals / cyans
-  ["#005555",0xC5],["#00AA55",0xC9],["#00FF55",0xCD],["#00FFAA",0xCE],
-  ["#00AAAA",0xCA],["#00FFFF",0xCF],["#55FFAA",0xDE],["#55FFFF",0xDF],
+  ["#005500",0xC4], ["#00AA00",0xC8], ["#00FF00",0xCC], ["#55FF00",0xDC],
+  // Light greens
+  ["#55AA55",0xD9], ["#55FF55",0xDD], ["#AAFF55",0xED], ["#AAFFAA",0xEE],
+  // Green-cyans
+  ["#00AA55",0xC9], ["#00FF55",0xCD], ["#00FFAA",0xCE], ["#55FFAA",0xDE],
+  // Teals
+  ["#005555",0xC5], ["#00AAAA",0xCA], ["#55AAAA",0xDA], ["#AAFFFF",0xEF],
+  // Cyans
+  ["#0055AA",0xC6], ["#00AAFF",0xCB], ["#00FFFF",0xCF], ["#55FFFF",0xDF],
   // Light blues
-  ["#0055AA",0xC6],["#00AAFF",0xCB],["#55AAFF",0xDB],["#AAFFFF",0xEF],
+  ["#55AAFF",0xDB], ["#0055FF",0xC7], ["#5555AA",0xD6], ["#5555FF",0xD7],
   // Blues
-  ["#000055",0xC1],["#0000AA",0xC2],["#0000FF",0xC3],["#5555FF",0xD7],
-  ["#0055FF",0xC7],["#5500FF",0xD3],["#AA00FF",0xE3],["#AAAAFF",0xEB],
-  // Purples / magentas
-  ["#550055",0xD1],["#AA00AA",0xE2],["#FF00FF",0xF3],["#FF55FF",0xF7],
-  // Pinks / hot pinks
-  ["#AA0055",0xE1],["#FF0055",0xF1],["#FF55AA",0xF6],["#FF00AA",0xF2],
-  // Remaining mixed
-  ["#5500AA",0xD2],["#AA55AA",0xE6],["#AA55FF",0xE7],["#FFAAFF",0xFB],
-  ["#5555AA",0xD6],["#55AA55",0xD9],["#55AAAA",0xDA],["#AAFFAA",0xEE],
+  ["#000055",0xC1], ["#0000AA",0xC2], ["#0000FF",0xC3], ["#AAAAFF",0xEB],
+  // Blue-purples
+  ["#5500AA",0xD2], ["#5500FF",0xD3], ["#AA00FF",0xE3], ["#AA55FF",0xE7],
+  // Purples
+  ["#550055",0xD1], ["#AA00AA",0xE2], ["#AA55AA",0xE6], ["#FF00FF",0xF3],
+  // Pinks / magentas
+  ["#AA0055",0xE1], ["#FF0055",0xF1], ["#FF55AA",0xF6], ["#FF00AA",0xF2],
+  // Pale pinks
+  ["#FFAAFF",0xFB], ["#FF55FF",0xF7], ["#FFAAAA",0xFA], ["#AA5555",0xE5]
 ];
 
 function argbToHex(argb) {
@@ -172,7 +162,7 @@ function argbToHex(argb) {
 let config = {
   bg_color:0xC0, hour_color:0xFF, min_color:0xFF, date_color:0xFF, day_color:0xFF,
   time_align:0, date_align:2, prefix:0, date_format:0, day_format:0,
-  font_choice:0, hour_case:0, min_case:0, date_case:0, day_case:0,
+  hour_case:0, min_case:0, date_case:0, day_case:0,
 };
 
 let currentTarget = null;
@@ -194,7 +184,6 @@ function updateSwatch(id, argb) {
 function initUI() {
   loadConfig();
   ['bg','hour','min','date','day'].forEach(id => updateSwatch(id, config[id+'_color']));
-  document.getElementById('font-choice').value = config.font_choice;
   document.getElementById('time-align').value  = config.time_align;
   document.getElementById('date-align').value  = config.date_align;
   document.getElementById('hour-case').value   = config.hour_case;
@@ -252,7 +241,6 @@ function updateDateHint() {
 }
 
 function saveAndClose() {
-  config.font_choice  = parseInt(document.getElementById('font-choice').value);
   config.time_align   = parseInt(document.getElementById('time-align').value);
   config.date_align   = parseInt(document.getElementById('date-align').value);
   config.hour_case    = parseInt(document.getElementById('hour-case').value);
@@ -268,7 +256,6 @@ function saveAndClose() {
     date_color:config.date_color, day_color:config.day_color,
     time_align:config.time_align, date_align:config.date_align,
     prefix:config.prefix, date_format:config.date_format, day_format:config.day_format,
-    font_choice:config.font_choice,
     hour_case:config.hour_case, min_case:config.min_case,
     date_case:config.date_case, day_case:config.day_case,
   };

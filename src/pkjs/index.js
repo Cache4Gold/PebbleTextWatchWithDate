@@ -6,7 +6,7 @@ Pebble.addEventListener('showConfiguration', function() {
   var keys = [
     'bg_color','hour_color','min_color','date_color','day_color',
     'time_align','date_align','prefix','date_format','day_format',
-    'font_choice','hour_case','min_case','date_case','day_case'
+    'hour_case','min_case','date_case','day_case'
   ];
   var currentConfig = {};
   keys.forEach(function(key) {

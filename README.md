@@ -1,6 +1,6 @@
 # Customizable Text Watch with Date and Weather
 
-A clean, fully customizable text-based watch face for Pebble. Tells the time in words — the way it was always meant to be read.
+A clean, fully customizable text-based watch face for Pebble. Tells the time in words, the way it was always meant to be read.
 
 Built originally over a decade ago and completely rebuilt from the ground up for 2025, this watch face is designed primarily for the Pebble Time 2, with support for the original Pebble and Pebble Time as well.
 

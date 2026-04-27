@@ -72,7 +72,8 @@ static int minutes_to_lines(int minutes, char *line2, char *line3,
     // Candidates: thirteen(8), fourteen(8), fifteen(7), sixteen(7),
     //             seventeen(9), eighteen(8), nineteen(8)
     // Skip: ten(3), eleven(6), twelve(6) - short enough or irregular
-    if (split_long_words && ones_val >= 3 && strlen(TEENS[ones_val]) > 7) {
+    // Split long teens except thirteen (ones_val=3) which fits on one line
+    if (split_long_words && ones_val >= 3 && ones_val != 3 && strlen(TEENS[ones_val]) > 6) {
       strncpy(line2, TEEN_ROOTS[ones_val], length - 1);
       strncpy(line3, "teen", length - 1);
       return 2;

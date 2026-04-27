@@ -470,22 +470,41 @@ static void prv_apply_settings(void) {
 
   // Reposition time lines for current font
   int lh = prv_line_height();
-  int top_margin = (s_screen_h <= 168) ? 6 : 16;
   int inset = PBL_IF_ROUND_ELSE(14, 0);
   int content_w = s_screen_w - (inset * 2);
-
-  layer_set_frame((Layer*)s_line1.currentLayer, GRect(inset, top_margin,            content_w, lh + 8));
-  layer_set_frame((Layer*)s_line1.nextLayer,    GRect(s_screen_w, top_margin,       content_w, lh + 8));
-  layer_set_frame((Layer*)s_line2.currentLayer, GRect(inset, top_margin + lh,       content_w, lh + 8));
-  layer_set_frame((Layer*)s_line2.nextLayer,    GRect(s_screen_w, top_margin + lh,  content_w, lh + 8));
-  layer_set_frame((Layer*)s_line3.currentLayer, GRect(inset, top_margin + (lh * 2), content_w, lh + 8));
-  layer_set_frame((Layer*)s_line3.nextLayer,    GRect(s_screen_w, top_margin+(lh*2),content_w, lh + 8));
-
-  // Date area: bottom of screen
-  // If day is hidden, give date a bit more room
   bool day_hidden = (s_settings.day_format == DAY_FORMAT_NONE);
-  int date_top = day_hidden ? (s_screen_h - 20) : (s_screen_h - 32);
-  int day_top  = s_screen_h - 48;
+
+  int y1, y2, y3, date_top, day_top;
+
+  if (s_screen_h <= 168) {
+    // Small screens: use original fixed positions that are proven to fit
+    // Lines at y=10, 47, 84 with date at 135/150 — exactly matches original watch
+    y1 = 10;
+    y2 = 47;
+    y3 = 84;
+    day_top  = day_hidden ? -20 : 135;
+    date_top = day_hidden ? 150 : 150;
+  } else {
+    // Large screens: calculate centered layout with room for date
+    int date_area_h = day_hidden ? 22 : 50;
+    int available_h = s_screen_h - date_area_h;
+    int total_text_h = lh * 3;
+    int top_margin = (available_h - total_text_h) / 2;
+    if (top_margin < 8) top_margin = 8;
+    y1 = top_margin;
+    y2 = top_margin + lh;
+    y3 = top_margin + (lh * 2);
+    date_top = day_hidden ? (s_screen_h - 22) : (s_screen_h - 34);
+    day_top  = s_screen_h - 52;
+  }
+
+  layer_set_frame((Layer*)s_line1.currentLayer, GRect(inset, y1, content_w, lh + 8));
+  layer_set_frame((Layer*)s_line1.nextLayer,    GRect(s_screen_w, y1, content_w, lh + 8));
+  layer_set_frame((Layer*)s_line2.currentLayer, GRect(inset, y2, content_w, lh + 8));
+  layer_set_frame((Layer*)s_line2.nextLayer,    GRect(s_screen_w, y2, content_w, lh + 8));
+  layer_set_frame((Layer*)s_line3.currentLayer, GRect(inset, y3, content_w, lh + 8));
+  layer_set_frame((Layer*)s_line3.nextLayer,    GRect(s_screen_w, y3, content_w, lh + 8));
+
   layer_set_frame((Layer*)s_date_layer, GRect(inset, date_top, content_w, 20));
   layer_set_frame((Layer*)s_day_layer,  GRect(inset, day_top,  content_w, 20));
 }

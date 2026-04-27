@@ -208,24 +208,14 @@ static void prv_save_settings(void) {
 // Font helpers
 // -------------------------------------------------------------------------
 static GFont prv_get_font_bold(void) {
-  // Use smaller font on narrow screens (original Pebble/Time = 144px wide)
-  if (s_screen_w <= 144) {
-    return fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD);
-  }
   return fonts_get_system_font(FONT_KEY_BITHAM_42_BOLD);
 }
 
 static GFont prv_get_font_light(void) {
-  if (s_screen_w <= 144) {
-    return fonts_get_system_font(FONT_KEY_GOTHIC_28);
-  }
   return fonts_get_system_font(FONT_KEY_BITHAM_42_LIGHT);
 }
 
 static int prv_line_height(void) {
-  if (s_screen_w <= 144) {
-    return 34; // Gothic 28
-  }
   return 50; // Bitham 42
 }
 
@@ -405,7 +395,8 @@ static void prv_set_date(struct tm *tm) {
 // -------------------------------------------------------------------------
 static void prv_display_time(struct tm *t) {
   char l1[BUFFER_SIZE], l2[BUFFER_SIZE], l3[BUFFER_SIZE];
-  time_to_3words(t->tm_hour, t->tm_min, l1, l2, l3, BUFFER_SIZE, s_settings.prefix);
+  time_to_3words(t->tm_hour, t->tm_min, l1, l2, l3, BUFFER_SIZE, s_settings.prefix,
+                 s_screen_w <= 144);
 
   apply_case(l1, s_settings.hour_case);
   apply_case(l2, s_settings.min_case);
@@ -419,7 +410,7 @@ static void prv_display_time(struct tm *t) {
 static void prv_display_initial_time(struct tm *t) {
   time_to_3words(t->tm_hour, t->tm_min,
                  s_line1Str[0], s_line2Str[0], s_line3Str[0],
-                 BUFFER_SIZE, s_settings.prefix);
+                 BUFFER_SIZE, s_settings.prefix, s_screen_w <= 144);
 
   apply_case(s_line1Str[0], s_settings.hour_case);
   apply_case(s_line2Str[0], s_settings.min_case);

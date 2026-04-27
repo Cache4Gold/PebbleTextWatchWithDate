@@ -435,15 +435,14 @@ static void prv_display_time(struct tm *t) {
 
   if (prv_needs_update(&s_line1, s_line1Str, l1)) prv_update_line(&s_line1, s_line1Str, l1);
   if (prv_needs_update(&s_line2, s_line2Str, l2)) prv_update_line(&s_line2, s_line2Str, l2);
-  // Always check line3 so it clears when transitioning from 3 lines to 2
-  if (prv_needs_update(&s_line3, s_line3Str, l3)) prv_update_line(&s_line3, s_line3Str, l3);
-  else if (l3[0] == 0) {
-    // Force clear line3 if it should be empty but may still show old content
-    GRect rect = layer_get_frame((Layer*)s_line3.currentLayer);
-    TextLayer *current = (rect.origin.x == 0) ? s_line3.currentLayer : s_line3.nextLayer;
-    text_layer_set_text(current, "");
+  if (l3[0] == 0) {
+    // Line3 should be empty - clear both layers directly and reset buffers
+    text_layer_set_text(s_line3.currentLayer, "");
+    text_layer_set_text(s_line3.nextLayer, "");
     memset(s_line3Str[0], 0, BUFFER_SIZE);
     memset(s_line3Str[1], 0, BUFFER_SIZE);
+  } else if (prv_needs_update(&s_line3, s_line3Str, l3)) {
+    prv_update_line(&s_line3, s_line3Str, l3);
   }
 }
 

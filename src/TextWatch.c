@@ -20,6 +20,8 @@
 #define PERSIST_KEY_TIME_CASE       13
 #define PERSIST_KEY_DATE_CASE       14
 #define PERSIST_KEY_DAY_CASE        15
+#define PERSIST_KEY_HOUR_CASE       16
+#define PERSIST_KEY_MIN_CASE        17
 
 // AppMessage keys
 #define MSG_KEY_BG_COLOR            1
@@ -37,6 +39,8 @@
 #define MSG_KEY_TIME_CASE           13
 #define MSG_KEY_DATE_CASE           14
 #define MSG_KEY_DAY_CASE            15
+#define MSG_KEY_HOUR_CASE           16
+#define MSG_KEY_MIN_CASE            17
 
 // -------------------------------------------------------------------------
 // Enums
@@ -55,6 +59,8 @@ typedef enum {
   DATE_FORMAT_NUM_MDY   = 4,  // 4/27/2026
   DATE_FORMAT_NUM_DMY   = 5,  // 27/4/2026
   DATE_FORMAT_NUM_YMD   = 6,  // 2026/4/27
+  DATE_FORMAT_NONE      = 7,  // hidden
+  DATE_FORMAT_DAY_ONLY  = 8,  // numeric day only (27)
 } DateFormat;
 
 typedef enum {
@@ -93,6 +99,8 @@ typedef struct {
   DayFormat   day_format;
   FontChoice  font_choice;
   CaseOption  time_case;
+  CaseOption  hour_case;
+  CaseOption  min_case;
   CaseOption  date_case;
   CaseOption  day_case;
 } Settings;
@@ -175,6 +183,10 @@ static void prv_load_settings(void) {
                            ? persist_read_int(PERSIST_KEY_FONT_CHOICE) : FONT_BITHAM_42;
   s_settings.time_case   = persist_exists(PERSIST_KEY_TIME_CASE)
                            ? persist_read_int(PERSIST_KEY_TIME_CASE) : CASE_LOWER;
+  s_settings.hour_case   = persist_exists(PERSIST_KEY_HOUR_CASE)
+                           ? persist_read_int(PERSIST_KEY_HOUR_CASE) : CASE_LOWER;
+  s_settings.min_case    = persist_exists(PERSIST_KEY_MIN_CASE)
+                           ? persist_read_int(PERSIST_KEY_MIN_CASE) : CASE_LOWER;
   s_settings.date_case   = persist_exists(PERSIST_KEY_DATE_CASE)
                            ? persist_read_int(PERSIST_KEY_DATE_CASE) : CASE_LOWER;
   s_settings.day_case    = persist_exists(PERSIST_KEY_DAY_CASE)
@@ -194,6 +206,8 @@ static void prv_save_settings(void) {
   persist_write_int(PERSIST_KEY_DAY_FORMAT,  s_settings.day_format);
   persist_write_int(PERSIST_KEY_FONT_CHOICE, s_settings.font_choice);
   persist_write_int(PERSIST_KEY_TIME_CASE,   s_settings.time_case);
+  persist_write_int(PERSIST_KEY_HOUR_CASE,   s_settings.hour_case);
+  persist_write_int(PERSIST_KEY_MIN_CASE,    s_settings.min_case);
   persist_write_int(PERSIST_KEY_DATE_CASE,   s_settings.date_case);
   persist_write_int(PERSIST_KEY_DAY_CASE,    s_settings.day_case);
 }
@@ -328,7 +342,14 @@ static void prv_set_date(struct tm *tm) {
   else if (day == 3 || day == 23)             suffix = "rd";
   else                                        suffix = "th";
 
-  switch (s_settings.date_format) {
+  // Hide date layer if format is NONE
+  layer_set_hidden((Layer*)s_date_layer, s_settings.date_format == DATE_FORMAT_NONE);
+
+  if (s_settings.date_format == DATE_FORMAT_NONE) {
+    date_str[0] = 0;
+  } else if (s_settings.date_format == DATE_FORMAT_DAY_ONLY) {
+    snprintf(date_str, sizeof(date_str), "%d", tm->tm_mday);
+  } else switch (s_settings.date_format) {
     case DATE_FORMAT_LONG_US: {
       char month_str[16], year_str[8];
       strftime(month_str, sizeof(month_str), "%B", tm);
@@ -398,9 +419,9 @@ static void prv_display_time(struct tm *t) {
   char l1[BUFFER_SIZE], l2[BUFFER_SIZE], l3[BUFFER_SIZE];
   time_to_3words(t->tm_hour, t->tm_min, l1, l2, l3, BUFFER_SIZE, s_settings.prefix);
 
-  apply_case(l1, s_settings.time_case);
-  apply_case(l2, s_settings.time_case);
-  apply_case(l3, s_settings.time_case);
+  apply_case(l1, s_settings.hour_case);
+  apply_case(l2, s_settings.min_case);
+  apply_case(l3, s_settings.min_case);
 
   if (prv_needs_update(&s_line1, s_line1Str, l1)) prv_update_line(&s_line1, s_line1Str, l1);
   if (prv_needs_update(&s_line2, s_line2Str, l2)) prv_update_line(&s_line2, s_line2Str, l2);
@@ -412,9 +433,9 @@ static void prv_display_initial_time(struct tm *t) {
                  s_line1Str[0], s_line2Str[0], s_line3Str[0],
                  BUFFER_SIZE, s_settings.prefix);
 
-  apply_case(s_line1Str[0], s_settings.time_case);
-  apply_case(s_line2Str[0], s_settings.time_case);
-  apply_case(s_line3Str[0], s_settings.time_case);
+  apply_case(s_line1Str[0], s_settings.hour_case);
+  apply_case(s_line2Str[0], s_settings.min_case);
+  apply_case(s_line3Str[0], s_settings.min_case);
 
   text_layer_set_text(s_line1.currentLayer, s_line1Str[0]);
   text_layer_set_text(s_line2.currentLayer, s_line2Str[0]);
@@ -530,6 +551,12 @@ static void prv_inbox_received(DictionaryIterator *iter, void *context) {
 
   t = dict_find(iter, MSG_KEY_TIME_CASE);
   if (t) s_settings.time_case = (CaseOption)t->value->int32;
+
+  t = dict_find(iter, MSG_KEY_HOUR_CASE);
+  if (t) s_settings.hour_case = (CaseOption)t->value->int32;
+
+  t = dict_find(iter, MSG_KEY_MIN_CASE);
+  if (t) s_settings.min_case = (CaseOption)t->value->int32;
 
   t = dict_find(iter, MSG_KEY_DATE_CASE);
   if (t) s_settings.date_case = (CaseOption)t->value->int32;

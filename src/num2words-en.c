@@ -37,84 +37,82 @@ static const char* const TENS[] = {
   "fifty"
 };
 
-// Write a number 0-59 as words into buf.
-static int number_to_words(char *buf, int num, int is_minutes, MinutePrefix prefix) {
-  int tens_val = num / 10;
-  int ones_val = num % 10;
+// Write hour (1-12) as a word into line1.
+static void hour_to_line(int hours, char *line1, size_t length) {
+  int h = hours % 12;
+  if (h == 0) {
+    strncpy(line1, "twelve", length - 1);
+  } else if (h >= 10) {
+    // 10-12 are teens
+    strncpy(line1, TEENS[h - 10], length - 1);
+  } else {
+    strncpy(line1, ONES[h], length - 1);
+  }
+}
 
-  // Teens 10-19: single complete word
+// Write minutes (0-59) into line2 and optionally line3.
+// Returns number of lines used (1 or 2).
+static int minutes_to_lines(int minutes, char *line2, char *line3,
+                             size_t length, MinutePrefix prefix) {
+  memset(line2, 0, length);
+  memset(line3, 0, length);
+
+  if (minutes == 0) {
+    strncpy(line2, "o'clock", length - 1);
+    return 1;
+  }
+
+  int tens_val = minutes / 10;
+  int ones_val = minutes % 10;
+
   if (tens_val == 1) {
-    strcpy(buf, TEENS[ones_val]);
-    return (int)strlen(buf);
+    // 10-19: single teen word goes on line2
+    strncpy(line2, TEENS[ones_val], length - 1);
+    return 1;
   }
 
-  int len = 0;
-
-  // For minutes 1-9, optionally prepend "oh"
-  if (is_minutes && tens_val == 0 && ones_val > 0) {
+  if (tens_val == 0) {
+    // 1-9: apply prefix on line2, word on line2
     if (prefix == PREFIX_OH) {
-      strcpy(buf, "oh ");
-      len = 3;
-    }
-  } else if (tens_val > 0) {
-    strcpy(buf, TENS[tens_val]);
-    len = (int)strlen(TENS[tens_val]);
-    if (ones_val > 0) {
-      buf[len++] = ' ';
+      strncpy(line2, "oh", length - 1);
+      strncpy(line3, ONES[ones_val], length - 1);
+      return 2;
+    } else if (prefix == PREFIX_O) {
+      // "o' five" fits on one line
+      snprintf(line2, length, "o' %s", ONES[ones_val]);
+      return 1;
+    } else {
+      strncpy(line2, ONES[ones_val], length - 1);
+      return 1;
     }
   }
 
-  if (ones_val > 0 || num == 0) {
-    strcpy(buf + len, ONES[ones_val]);
-    len += (int)strlen(ONES[ones_val]);
+  // 20-59: tens word on line2, ones word on line3 (if any)
+  strncpy(line2, TENS[tens_val], length - 1);
+  if (ones_val > 0) {
+    strncpy(line3, ONES[ones_val], length - 1);
+    return 2;
   }
-
-  return len;
+  return 1;
 }
 
 void time_to_words(int hours, int minutes, char *words, size_t length, MinutePrefix prefix) {
+  // Build a flat string representation for compatibility
+  char l1[32] = {0}, l2[32] = {0}, l3[32] = {0};
+  hour_to_line(hours, l1, sizeof(l1));
+  minutes_to_lines(minutes, l2, l3, sizeof(l2), prefix);
   memset(words, 0, length);
-  char tmp[32];
-
-  if (hours == 0 || hours == 12) {
-    strncat(words, "twelve", length - 1);
-  } else {
-    number_to_words(tmp, hours % 12, 0, prefix);
-    strncat(words, tmp, length - 1);
-  }
-  strncat(words, " ", length - 1);
-
-  number_to_words(tmp, minutes, 1, prefix);
-  strncat(words, tmp, length - 1);
-  strncat(words, " ", length - 1);
+  strncat(words, l1, length - 1);
+  if (l2[0]) { strncat(words, " ", length - 1); strncat(words, l2, length - 1); }
+  if (l3[0]) { strncat(words, " ", length - 1); strncat(words, l3, length - 1); }
 }
 
-void time_to_3words(int hours, int minutes, char *line1, char *line2, char *line3, size_t length, MinutePrefix prefix) {
+void time_to_3words(int hours, int minutes, char *line1, char *line2, char *line3,
+                    size_t length, MinutePrefix prefix) {
   memset(line1, 0, length);
   memset(line2, 0, length);
   memset(line3, 0, length);
 
-  char value[64];
-  time_to_words(hours, minutes, value, sizeof(value), prefix);
-
-  // Tokenize into up to 3 lines
-  char copy[64];
-  strncpy(copy, value, sizeof(copy) - 1);
-
-  char *token = strtok(copy, " ");
-  int line = 1;
-  while (token != NULL && line <= 3) {
-    if (line == 1)      strncpy(line1, token, length - 1);
-    else if (line == 2) strncpy(line2, token, length - 1);
-    else if (line == 3) strncpy(line3, token, length - 1);
-    line++;
-    token = strtok(NULL, " ");
-  }
-
-  // Apply "o'" prefix to line2 for minutes 1-9
-  if (prefix == PREFIX_O && minutes > 0 && minutes < 10) {
-    char tmp[32];
-    snprintf(tmp, sizeof(tmp), "o' %s", line2);
-    strncpy(line2, tmp, length - 1);
-  }
+  hour_to_line(hours, line1, length);
+  minutes_to_lines(minutes, line2, line3, length, prefix);
 }

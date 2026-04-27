@@ -189,10 +189,11 @@ static GTextAlignment prv_galign(AlignOption a) {
 // -------------------------------------------------------------------------
 static void prv_destroy_property_animation(PropertyAnimation **prop_animation) {
   if (*prop_animation == NULL) return;
+  // Only unschedule if still running - do not call if already completed
   if (animation_is_scheduled((Animation*)*prop_animation)) {
     animation_unschedule((Animation*)*prop_animation);
+    property_animation_destroy(*prop_animation);
   }
-  property_animation_destroy(*prop_animation);
   *prop_animation = NULL;
 }
 
@@ -201,17 +202,6 @@ static void prv_animation_stopped(struct Animation *animation, bool finished, vo
   GRect rect = layer_get_frame(current);
   rect.origin.x = s_screen_w;
   layer_set_frame(current, rect);
-  // NULL out the pointer on whichever line owns this animation so
-  // prv_destroy_property_animation does not try to unschedule it again
-  Line *lines[] = {&s_line1, &s_line2, &s_line3};
-  for (int i = 0; i < 3; i++) {
-    if ((Animation*)lines[i]->currentAnimation == animation) {
-      lines[i]->currentAnimation = NULL;
-    }
-    if ((Animation*)lines[i]->nextAnimation == animation) {
-      lines[i]->nextAnimation = NULL;
-    }
-  }
 }
 
 static void prv_animate_line(Line *line, TextLayer *current, TextLayer *next) {

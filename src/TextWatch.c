@@ -395,6 +395,10 @@ static void prv_animate_line(Line *line, TextLayer *current, TextLayer *next) {
 }
 
 static void prv_update_line(Line *line, char lineStr[2][BUFFER_SIZE], char *value) {
+  // Ensure both layers are visible (may have been hidden by prv_force_clear_line)
+  layer_set_hidden((Layer*)line->currentLayer, false);
+  layer_set_hidden((Layer*)line->nextLayer, false);
+
   TextLayer *next, *current;
   GRect rect = layer_get_frame((Layer*)line->currentLayer);
   current = (rect.origin.x == 0) ? line->currentLayer : line->nextLayer;
@@ -425,18 +429,22 @@ static bool prv_needs_update(Line *line, char lineStr[2][BUFFER_SIZE], char *nex
 // Display time
 // -------------------------------------------------------------------------
 static void prv_force_clear_line(Line *line, char lineStr[2][BUFFER_SIZE]) {
-  // Cancel any running animation and immediately clear both layers
+  // Cancel any running animations
   prv_destroy_property_animation(&line->currentAnimation);
   prv_destroy_property_animation(&line->nextAnimation);
+  // Hide both layers completely
+  layer_set_hidden((Layer*)line->currentLayer, true);
+  layer_set_hidden((Layer*)line->nextLayer, true);
   text_layer_set_text(line->currentLayer, "");
   text_layer_set_text(line->nextLayer, "");
-  // Reset both layer positions
+  // Reset positions to known state for next use
   GRect r = layer_get_frame((Layer*)line->currentLayer);
   r.origin.x = 0;
   layer_set_frame((Layer*)line->currentLayer, r);
   GRect r2 = layer_get_frame((Layer*)line->nextLayer);
   r2.origin.x = s_screen_w;
   layer_set_frame((Layer*)line->nextLayer, r2);
+  // Reset string buffers
   memset(lineStr[0], 0, BUFFER_SIZE);
   memset(lineStr[1], 0, BUFFER_SIZE);
 }

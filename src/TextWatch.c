@@ -424,6 +424,23 @@ static bool prv_needs_update(Line *line, char lineStr[2][BUFFER_SIZE], char *nex
 // -------------------------------------------------------------------------
 // Display time
 // -------------------------------------------------------------------------
+static void prv_force_clear_line(Line *line, char lineStr[2][BUFFER_SIZE]) {
+  // Cancel any running animation and immediately clear both layers
+  prv_destroy_property_animation(&line->currentAnimation);
+  prv_destroy_property_animation(&line->nextAnimation);
+  text_layer_set_text(line->currentLayer, "");
+  text_layer_set_text(line->nextLayer, "");
+  // Reset both layer positions
+  GRect r = layer_get_frame((Layer*)line->currentLayer);
+  r.origin.x = 0;
+  layer_set_frame((Layer*)line->currentLayer, r);
+  GRect r2 = layer_get_frame((Layer*)line->nextLayer);
+  r2.origin.x = s_screen_w;
+  layer_set_frame((Layer*)line->nextLayer, r2);
+  memset(lineStr[0], 0, BUFFER_SIZE);
+  memset(lineStr[1], 0, BUFFER_SIZE);
+}
+
 static void prv_display_time(struct tm *t) {
   char l1[BUFFER_SIZE], l2[BUFFER_SIZE], l3[BUFFER_SIZE];
   time_to_3words(t->tm_hour, t->tm_min, l1, l2, l3, BUFFER_SIZE,
@@ -433,17 +450,14 @@ static void prv_display_time(struct tm *t) {
   apply_case(l2, s_settings.min_case);
   apply_case(l3, s_settings.min_case);
 
+  // Clear empty lines immediately before animating occupied ones
+  // This prevents stale content showing through during transitions
+  if (l3[0] == 0) prv_force_clear_line(&s_line3, s_line3Str);
+  if (l2[0] == 0) prv_force_clear_line(&s_line2, s_line2Str);
+
   if (prv_needs_update(&s_line1, s_line1Str, l1)) prv_update_line(&s_line1, s_line1Str, l1);
   if (prv_needs_update(&s_line2, s_line2Str, l2)) prv_update_line(&s_line2, s_line2Str, l2);
-  if (l3[0] == 0) {
-    // Line3 should be empty - clear both layers directly and reset buffers
-    text_layer_set_text(s_line3.currentLayer, "");
-    text_layer_set_text(s_line3.nextLayer, "");
-    memset(s_line3Str[0], 0, BUFFER_SIZE);
-    memset(s_line3Str[1], 0, BUFFER_SIZE);
-  } else if (prv_needs_update(&s_line3, s_line3Str, l3)) {
-    prv_update_line(&s_line3, s_line3Str, l3);
-  }
+  if (prv_needs_update(&s_line3, s_line3Str, l3)) prv_update_line(&s_line3, s_line3Str, l3);
 }
 
 static void prv_display_initial_time(struct tm *t) {

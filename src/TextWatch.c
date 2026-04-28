@@ -417,8 +417,9 @@ static bool prv_needs_update(Line *line, char lineStr[2][BUFFER_SIZE], char *nex
   char *currentStr;
   GRect rect = layer_get_frame((Layer*)line->currentLayer);
   currentStr = (rect.origin.x == 0) ? lineStr[0] : lineStr[1];
-  return (memcmp(currentStr, nextValue, strlen(nextValue)) != 0 ||
-          (strlen(nextValue) == 0 && strlen(currentStr) != 0));
+  // Compare full strings including length — fixes cases where new value is a
+  // prefix of the old value (e.g. "o'" vs "o' six" would previously not update)
+  return (strcmp(currentStr, nextValue) != 0);
 }
 
 // -------------------------------------------------------------------------

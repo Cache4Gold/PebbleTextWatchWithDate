@@ -395,10 +395,6 @@ static void prv_animate_line(Line *line, TextLayer *current, TextLayer *next) {
 }
 
 static void prv_update_line(Line *line, char lineStr[2][BUFFER_SIZE], char *value) {
-  // Ensure both layers are visible (may have been hidden by prv_force_clear_line)
-  layer_set_hidden((Layer*)line->currentLayer, false);
-  layer_set_hidden((Layer*)line->nextLayer, false);
-
   TextLayer *next, *current;
   GRect rect = layer_get_frame((Layer*)line->currentLayer);
   current = (rect.origin.x == 0) ? line->currentLayer : line->nextLayer;
@@ -428,25 +424,13 @@ static bool prv_needs_update(Line *line, char lineStr[2][BUFFER_SIZE], char *nex
 // -------------------------------------------------------------------------
 // Display time
 // -------------------------------------------------------------------------
+// Forward declaration
+static void prv_update_line(Line *line, char lineStr[2][BUFFER_SIZE], char *value);
+
 static void prv_force_clear_line(Line *line, char lineStr[2][BUFFER_SIZE]) {
-  // Cancel any running animations
-  prv_destroy_property_animation(&line->currentAnimation);
-  prv_destroy_property_animation(&line->nextAnimation);
-  // Hide both layers completely
-  layer_set_hidden((Layer*)line->currentLayer, true);
-  layer_set_hidden((Layer*)line->nextLayer, true);
-  text_layer_set_text(line->currentLayer, "");
-  text_layer_set_text(line->nextLayer, "");
-  // Reset positions to known state for next use
-  GRect r = layer_get_frame((Layer*)line->currentLayer);
-  r.origin.x = 0;
-  layer_set_frame((Layer*)line->currentLayer, r);
-  GRect r2 = layer_get_frame((Layer*)line->nextLayer);
-  r2.origin.x = s_screen_w;
-  layer_set_frame((Layer*)line->nextLayer, r2);
-  // Reset string buffers
-  memset(lineStr[0], 0, BUFFER_SIZE);
-  memset(lineStr[1], 0, BUFFER_SIZE);
+  // Use the normal update mechanism to animate the line out with empty content.
+  // This keeps the animation system consistent and avoids layer state confusion.
+  prv_update_line(line, lineStr, "");
 }
 
 static void prv_display_time(struct tm *t) {
@@ -458,14 +442,21 @@ static void prv_display_time(struct tm *t) {
   apply_case(l2, s_settings.min_case);
   apply_case(l3, s_settings.min_case);
 
-  // Clear empty lines immediately before animating occupied ones
-  // This prevents stale content showing through during transitions
-  if (l3[0] == 0) prv_force_clear_line(&s_line3, s_line3Str);
-  if (l2[0] == 0) prv_force_clear_line(&s_line2, s_line2Str);
-
   if (prv_needs_update(&s_line1, s_line1Str, l1)) prv_update_line(&s_line1, s_line1Str, l1);
   if (prv_needs_update(&s_line2, s_line2Str, l2)) prv_update_line(&s_line2, s_line2Str, l2);
-  if (prv_needs_update(&s_line3, s_line3Str, l3)) prv_update_line(&s_line3, s_line3Str, l3);
+
+  // For line3: if it should be empty but currently shows content, animate it away.
+  // Check the ACTUAL visible layer text, not just the string buffers.
+  if (l3[0] == 0) {
+    GRect rect3 = layer_get_frame((Layer*)s_line3.currentLayer);
+    TextLayer *visible3 = (rect3.origin.x == 0) ? s_line3.currentLayer : s_line3.nextLayer;
+    const char *visible_text = text_layer_get_text(visible3);
+    if (visible_text && visible_text[0] != 0) {
+      prv_update_line(&s_line3, s_line3Str, "");
+    }
+  } else if (prv_needs_update(&s_line3, s_line3Str, l3)) {
+    prv_update_line(&s_line3, s_line3Str, l3);
+  }
 }
 
 static void prv_display_initial_time(struct tm *t) {

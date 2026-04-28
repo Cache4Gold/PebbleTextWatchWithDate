@@ -519,14 +519,18 @@ static void prv_apply_settings(void) {
                         s_settings.slot2_content == SLOT_HIDDEN);
     int info_area_h = both_hidden ? 22 : 50;
     int available_h = s_screen_h - info_area_h;
-    int total_text_h = lh * 3;
+    // Tighter line spacing on large screens (44px steps vs 50px font height)
+    int line_step = lh - 6;
+    int total_text_h = line_step * 2 + lh; // two gaps + last line
     int top_margin = (available_h - total_text_h) / 2;
     if (top_margin < 8) top_margin = 8;
+    // Push down slightly so it's not too close to the top
+    top_margin += 12;
     y1 = top_margin;
-    y2 = top_margin + lh;
-    y3 = top_margin + (lh * 2);
-    slot2_top = s_screen_h - 22;
-    slot1_top = s_screen_h - 42;
+    y2 = top_margin + line_step;
+    y3 = top_margin + (line_step * 2);
+    slot2_top = s_screen_h - 26;
+    slot1_top = s_screen_h - 52;
   }
 
   layer_set_frame((Layer*)s_line1.currentLayer, GRect(inset, y1, content_w, lh + 8));
@@ -641,13 +645,22 @@ static void prv_window_load(Window *window) {
   s_line3.currentLayer = text_layer_create(GRect(0, 0, s_screen_w, 60));
   s_line3.nextLayer    = text_layer_create(GRect(s_screen_w, 0, s_screen_w, 60));
 
-  s_slot1_layer = text_layer_create(GRect(0, 0, s_screen_w, 20));
-  text_layer_set_background_color(s_slot1_layer, GColorClear);
-  text_layer_set_font(s_slot1_layer, fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD));
+  // Use larger info fonts on big screens, smaller on narrow screens
+  GFont slot1_font = (s_screen_h > 168)
+    ? fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD)
+    : fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD);
+  GFont slot2_font = (s_screen_h > 168)
+    ? fonts_get_system_font(FONT_KEY_GOTHIC_18)
+    : fonts_get_system_font(FONT_KEY_GOTHIC_14);
+  int slot_h = (s_screen_h > 168) ? 24 : 20;
 
-  s_slot2_layer = text_layer_create(GRect(0, 0, s_screen_w, 20));
+  s_slot1_layer = text_layer_create(GRect(0, 0, s_screen_w, slot_h));
+  text_layer_set_background_color(s_slot1_layer, GColorClear);
+  text_layer_set_font(s_slot1_layer, slot1_font);
+
+  s_slot2_layer = text_layer_create(GRect(0, 0, s_screen_w, slot_h));
   text_layer_set_background_color(s_slot2_layer, GColorClear);
-  text_layer_set_font(s_slot2_layer, fonts_get_system_font(FONT_KEY_GOTHIC_14));
+  text_layer_set_font(s_slot2_layer, slot2_font);
 
   prv_apply_settings();
 

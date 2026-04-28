@@ -132,6 +132,7 @@ typedef struct {
   TextLayer *nextLayer;
   PropertyAnimation *currentAnimation;
   PropertyAnimation *nextAnimation;
+  int activeIndex; // 0 = currentLayer is showing, 1 = nextLayer is showing
 } Line;
 
 static Line s_line1, s_line2, s_line3;
@@ -365,10 +366,11 @@ static void prv_destroy_property_animation(PropertyAnimation **prop_animation) {
 }
 
 static void prv_animation_stopped(struct Animation *animation, bool finished, void *context) {
-  Layer *current = (Layer *)context;
-  GRect rect = layer_get_frame(current);
+  // Move the outgoing layer off screen after animation completes
+  Layer *outgoing = (Layer *)context;
+  GRect rect = layer_get_frame(outgoing);
   rect.origin.x = s_screen_w;
-  layer_set_frame(current, rect);
+  layer_set_frame(outgoing, rect);
 }
 
 static void prv_animate_line(Line *line, TextLayer *current, TextLayer *next) {
@@ -395,12 +397,14 @@ static void prv_animate_line(Line *line, TextLayer *current, TextLayer *next) {
 }
 
 static void prv_update_line(Line *line, char lineStr[2][BUFFER_SIZE], char *value) {
-  TextLayer *next, *current;
-  GRect rect = layer_get_frame((Layer*)line->currentLayer);
-  current = (rect.origin.x == 0) ? line->currentLayer : line->nextLayer;
-  next    = (current == line->currentLayer) ? line->nextLayer : line->currentLayer;
+  // Use activeIndex to determine which layer is currently visible
+  // This is reliable even if animations are mid-flight
+  TextLayer *current = (line->activeIndex == 0) ? line->currentLayer : line->nextLayer;
+  TextLayer *next    = (line->activeIndex == 0) ? line->nextLayer    : line->currentLayer;
+  int nextIndex      = (line->activeIndex == 0) ? 1 : 0;
 
-  if (current == line->currentLayer) {
+  // Write new value to the next layer's string buffer
+  if (next == line->nextLayer) {
     memset(lineStr[1], 0, BUFFER_SIZE);
     memcpy(lineStr[1], value, strlen(value));
     text_layer_set_text(next, lineStr[1]);
@@ -410,28 +414,26 @@ static void prv_update_line(Line *line, char lineStr[2][BUFFER_SIZE], char *valu
     text_layer_set_text(next, lineStr[0]);
   }
 
+  // Update activeIndex before animating
+  line->activeIndex = nextIndex;
   prv_animate_line(line, current, next);
 }
 
 static bool prv_needs_update(Line *line, char lineStr[2][BUFFER_SIZE], char *nextValue) {
-  char *currentStr;
-  GRect rect = layer_get_frame((Layer*)line->currentLayer);
-  currentStr = (rect.origin.x == 0) ? lineStr[0] : lineStr[1];
-  // Compare full strings including length — fixes cases where new value is a
-  // prefix of the old value (e.g. "o'" vs "o' six" would previously not update)
+  // Use activeIndex to reliably find the current string, even mid-animation
+  char *currentStr = (line->activeIndex == 0) ? lineStr[0] : lineStr[1];
   return (strcmp(currentStr, nextValue) != 0);
 }
 
 // -------------------------------------------------------------------------
 // Display time
 // -------------------------------------------------------------------------
-// Forward declaration
-static void prv_update_line(Line *line, char lineStr[2][BUFFER_SIZE], char *value);
-
 static void prv_force_clear_line(Line *line, char lineStr[2][BUFFER_SIZE]) {
-  // Use the normal update mechanism to animate the line out with empty content.
-  // This keeps the animation system consistent and avoids layer state confusion.
-  prv_update_line(line, lineStr, "");
+  // Only animate away if the line is actually showing content
+  char *currentStr = (line->activeIndex == 0) ? lineStr[0] : lineStr[1];
+  if (currentStr[0] != 0) {
+    prv_update_line(line, lineStr, "");
+  }
 }
 
 static void prv_display_time(struct tm *t) {
@@ -468,6 +470,11 @@ static void prv_display_initial_time(struct tm *t) {
   apply_case(s_line1Str[0], s_settings.hour_case);
   apply_case(s_line2Str[0], s_settings.min_case);
   apply_case(s_line3Str[0], s_settings.min_case);
+
+  // Reset activeIndex — currentLayer is the one showing on startup
+  s_line1.activeIndex = 0;
+  s_line2.activeIndex = 0;
+  s_line3.activeIndex = 0;
 
   text_layer_set_text(s_line1.currentLayer, s_line1Str[0]);
   text_layer_set_text(s_line2.currentLayer, s_line2Str[0]);
@@ -654,10 +661,13 @@ static void prv_window_load(Window *window) {
 
   s_line1.currentLayer = text_layer_create(GRect(0, 0, s_screen_w, 60));
   s_line1.nextLayer    = text_layer_create(GRect(s_screen_w, 0, s_screen_w, 60));
+  s_line1.activeIndex  = 0;
   s_line2.currentLayer = text_layer_create(GRect(0, 0, s_screen_w, 60));
   s_line2.nextLayer    = text_layer_create(GRect(s_screen_w, 0, s_screen_w, 60));
+  s_line2.activeIndex  = 0;
   s_line3.currentLayer = text_layer_create(GRect(0, 0, s_screen_w, 60));
   s_line3.nextLayer    = text_layer_create(GRect(s_screen_w, 0, s_screen_w, 60));
+  s_line3.activeIndex  = 0;
 
   // Use larger info fonts on big screens, smaller on narrow screens
   GFont slot1_font = (s_screen_h > 168)

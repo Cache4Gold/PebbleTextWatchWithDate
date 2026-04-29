@@ -243,15 +243,22 @@ static void prv_save_settings(void) {
 // Font helpers
 // -------------------------------------------------------------------------
 static GFont prv_get_font_bold(void) {
+  // Round screens use Bitham 30 Black — fits the narrower usable width
+  if (PBL_IF_ROUND_ELSE(true, false)) {
+    return fonts_get_system_font(FONT_KEY_BITHAM_30_BLACK);
+  }
   return fonts_get_system_font(FONT_KEY_BITHAM_42_BOLD);
 }
 
 static GFont prv_get_font_light(void) {
+  if (PBL_IF_ROUND_ELSE(true, false)) {
+    return fonts_get_system_font(FONT_KEY_BITHAM_30_BLACK);
+  }
   return fonts_get_system_font(FONT_KEY_BITHAM_42_LIGHT);
 }
 
 static int prv_line_height(void) {
-  return 50;
+  return PBL_IF_ROUND_ELSE(36, 50);
 }
 
 static GTextAlignment prv_galign(AlignOption a) {
@@ -439,7 +446,7 @@ static void prv_force_clear_line(Line *line, char lineStr[2][BUFFER_SIZE]) {
 static void prv_display_time(struct tm *t) {
   char l1[BUFFER_SIZE], l2[BUFFER_SIZE], l3[BUFFER_SIZE];
   time_to_3words(t->tm_hour, t->tm_min, l1, l2, l3, BUFFER_SIZE,
-                 s_settings.prefix, s_screen_w <= 144);
+                 s_settings.prefix, s_screen_w <= 144 && !PBL_IF_ROUND_ELSE(true, false));
 
   apply_case(l1, s_settings.hour_case);
   apply_case(l2, s_settings.min_case);
@@ -465,7 +472,7 @@ static void prv_display_time(struct tm *t) {
 static void prv_display_initial_time(struct tm *t) {
   time_to_3words(t->tm_hour, t->tm_min,
                  s_line1Str[0], s_line2Str[0], s_line3Str[0],
-                 BUFFER_SIZE, s_settings.prefix, s_screen_w <= 144);
+                 BUFFER_SIZE, s_settings.prefix, s_screen_w <= 144 && !PBL_IF_ROUND_ELSE(true, false));
 
   apply_case(s_line1Str[0], s_settings.hour_case);
   apply_case(s_line2Str[0], s_settings.min_case);
@@ -531,38 +538,61 @@ static void prv_apply_settings(void) {
 
   int y1, y2, y3, slot1_top, slot2_top;
 
-  if (s_screen_h <= 168) {
-    y1 = 10; y2 = 47; y3 = 84;
-    slot1_top = 135;
-    slot2_top = 150;
+  if (PBL_IF_ROUND_ELSE(true, false)) {
+    // Round screen (Time Round: 180x180)
+    // Fixed positions with per-line insets calculated from circular geometry
+    // Insets vary per line based on distance from center (y=90)
+    y1 = 10; y2 = 46; y3 = 82;
+    slot1_top = 128;
+    slot2_top = 148;
+
+    int inset1 = 36, w1 = 180 - (inset1 * 2);  // line1 near top, narrow
+    int inset2 = 14, w2 = 180 - (inset2 * 2);  // line2 near center, widest
+    int inset3 = 10, w3 = 180 - (inset3 * 2);  // line3 below center, wide
+    int insetS1 = 24, wS1 = 180 - (insetS1 * 2);
+    int insetS2 = 42, wS2 = 180 - (insetS2 * 2);
+
+    layer_set_frame((Layer*)s_line1.currentLayer, GRect(inset1, y1, w1, lh + 6));
+    layer_set_frame((Layer*)s_line1.nextLayer,    GRect(s_screen_w, y1, w1, lh + 6));
+    layer_set_frame((Layer*)s_line2.currentLayer, GRect(inset2, y2, w2, lh + 6));
+    layer_set_frame((Layer*)s_line2.nextLayer,    GRect(s_screen_w, y2, w2, lh + 6));
+    layer_set_frame((Layer*)s_line3.currentLayer, GRect(inset3, y3, w3, lh + 6));
+    layer_set_frame((Layer*)s_line3.nextLayer,    GRect(s_screen_w, y3, w3, lh + 6));
+    layer_set_frame((Layer*)s_slot1_layer, GRect(insetS1, slot1_top, wS1, 20));
+    layer_set_frame((Layer*)s_slot2_layer, GRect(insetS2, slot2_top, wS2, 20));
   } else {
-    bool both_hidden = (s_settings.slot1_content == SLOT_HIDDEN &&
-                        s_settings.slot2_content == SLOT_HIDDEN);
-    int info_area_h = both_hidden ? 22 : 50;
-    int available_h = s_screen_h - info_area_h;
-    // Tighter line spacing on large screens (44px steps vs 50px font height)
-    int line_step = lh - 6;
-    int total_text_h = line_step * 2 + lh; // two gaps + last line
-    int top_margin = (available_h - total_text_h) / 2;
-    if (top_margin < 8) top_margin = 8;
-    // Push down slightly so it's not too close to the top
-    top_margin += 12;
-    y1 = top_margin;
-    y2 = top_margin + line_step;
-    y3 = top_margin + (line_step * 2);
-    slot2_top = s_screen_h - 26;
-    slot1_top = s_screen_h - 52;
+    if (s_screen_h <= 168) {
+      // Small rectangular screens: proven fixed positions from original watch
+      y1 = 10; y2 = 47; y3 = 84;
+      slot1_top = 135;
+      slot2_top = 150;
+    } else {
+      // Large rectangular screens (Time 2: 200x228)
+      bool both_hidden = (s_settings.slot1_content == SLOT_HIDDEN &&
+                          s_settings.slot2_content == SLOT_HIDDEN);
+      int info_area_h = both_hidden ? 22 : 50;
+      int available_h = s_screen_h - info_area_h;
+      int line_step = lh - 6;
+      int total_text_h = line_step * 2 + lh;
+      int top_margin = (available_h - total_text_h) / 2;
+      if (top_margin < 8) top_margin = 8;
+      top_margin += 12;
+      y1 = top_margin;
+      y2 = top_margin + line_step;
+      y3 = top_margin + (line_step * 2);
+      slot2_top = s_screen_h - 26;
+      slot1_top = s_screen_h - 52;
+    }
+
+    layer_set_frame((Layer*)s_line1.currentLayer, GRect(inset, y1, content_w, lh + 8));
+    layer_set_frame((Layer*)s_line1.nextLayer,    GRect(s_screen_w, y1, content_w, lh + 8));
+    layer_set_frame((Layer*)s_line2.currentLayer, GRect(inset, y2, content_w, lh + 8));
+    layer_set_frame((Layer*)s_line2.nextLayer,    GRect(s_screen_w, y2, content_w, lh + 8));
+    layer_set_frame((Layer*)s_line3.currentLayer, GRect(inset, y3, content_w, lh + 8));
+    layer_set_frame((Layer*)s_line3.nextLayer,    GRect(s_screen_w, y3, content_w, lh + 8));
+    layer_set_frame((Layer*)s_slot1_layer, GRect(inset, slot1_top, content_w, 20));
+    layer_set_frame((Layer*)s_slot2_layer, GRect(inset, slot2_top, content_w, 20));
   }
-
-  layer_set_frame((Layer*)s_line1.currentLayer, GRect(inset, y1, content_w, lh + 8));
-  layer_set_frame((Layer*)s_line1.nextLayer,    GRect(s_screen_w, y1, content_w, lh + 8));
-  layer_set_frame((Layer*)s_line2.currentLayer, GRect(inset, y2, content_w, lh + 8));
-  layer_set_frame((Layer*)s_line2.nextLayer,    GRect(s_screen_w, y2, content_w, lh + 8));
-  layer_set_frame((Layer*)s_line3.currentLayer, GRect(inset, y3, content_w, lh + 8));
-  layer_set_frame((Layer*)s_line3.nextLayer,    GRect(s_screen_w, y3, content_w, lh + 8));
-
-  layer_set_frame((Layer*)s_slot1_layer, GRect(inset, slot1_top, content_w, 20));
-  layer_set_frame((Layer*)s_slot2_layer, GRect(inset, slot2_top, content_w, 20));
 }
 
 // -------------------------------------------------------------------------

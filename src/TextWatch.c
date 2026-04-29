@@ -6,6 +6,8 @@
 // -------------------------------------------------------------------------
 // Persist keys
 // -------------------------------------------------------------------------
+#define PERSIST_KEY_SETTINGS_VER    0  // increment to force default reset
+#define SETTINGS_VERSION            2  // current version
 #define PERSIST_KEY_BG_COLOR        1
 #define PERSIST_KEY_TIME_COLOR      2  // unused, kept for legacy compat
 #define PERSIST_KEY_DATE_COLOR      3  // slot2 color
@@ -173,6 +175,17 @@ static void apply_case(char *str, CaseOption c) {
 // Settings load/save
 // -------------------------------------------------------------------------
 static void prv_load_settings(void) {
+  // If settings version doesn't match, clear slot-related settings
+  // so platform-specific defaults get applied fresh
+  if (!persist_exists(PERSIST_KEY_SETTINGS_VER) ||
+      persist_read_int(PERSIST_KEY_SETTINGS_VER) < SETTINGS_VERSION) {
+    persist_delete(PERSIST_KEY_SLOT1_CONTENT);
+    persist_delete(PERSIST_KEY_SLOT1_ALIGN);
+    persist_delete(PERSIST_KEY_SLOT2_CONTENT);
+    persist_delete(PERSIST_KEY_SLOT2_ALIGN);
+    persist_write_int(PERSIST_KEY_SETTINGS_VER, SETTINGS_VERSION);
+  }
+
   s_settings.bg_color    = persist_exists(PERSIST_KEY_BG_COLOR)
                            ? (GColor){ .argb = persist_read_int(PERSIST_KEY_BG_COLOR) }
                            : GColorBlack;
@@ -556,7 +569,7 @@ static void prv_apply_settings(void) {
 
     int inset1 = 36, w1 = 180 - (inset1 * 2);  // line1 near top, narrow
     int inset2 = 14, w2 = 180 - (inset2 * 2);  // line2 near center, widest
-    int inset3 = 16, w3 = 180 - (inset3 * 2);  // line3 below center
+    int inset3 = 12, w3 = 180 - (inset3 * 2);  // line3 below center
     int insetS1 = 24, wS1 = 180 - (insetS1 * 2);
     int insetS2 = 42, wS2 = 180 - (insetS2 * 2);
 

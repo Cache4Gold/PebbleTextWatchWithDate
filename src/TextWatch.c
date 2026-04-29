@@ -243,14 +243,15 @@ static void prv_save_settings(void) {
 // Font helpers
 // -------------------------------------------------------------------------
 static GFont prv_get_font_bold(void) {
-  // Round screens use Gothic 24 Bold/Regular for bold/light distinction
+  // Round screens: Gothic 28 Bold for hour (bigger, bolder)
   if (PBL_IF_ROUND_ELSE(true, false)) {
-    return fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD);
+    return fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD);
   }
   return fonts_get_system_font(FONT_KEY_BITHAM_42_BOLD);
 }
 
 static GFont prv_get_font_light(void) {
+  // Round screens: Gothic 24 Regular for minutes (smaller, lighter)
   if (PBL_IF_ROUND_ELSE(true, false)) {
     return fonts_get_system_font(FONT_KEY_GOTHIC_24);
   }
@@ -258,7 +259,7 @@ static GFont prv_get_font_light(void) {
 }
 
 static int prv_line_height(void) {
-  return PBL_IF_ROUND_ELSE(30, 50);
+  return PBL_IF_ROUND_ELSE(32, 50);
 }
 
 static GTextAlignment prv_galign(AlignOption a) {

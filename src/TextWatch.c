@@ -243,22 +243,22 @@ static void prv_save_settings(void) {
 // Font helpers
 // -------------------------------------------------------------------------
 static GFont prv_get_font_bold(void) {
-  // Round screens use Bitham 30 Black — fits the narrower usable width
+  // Round screens use Gothic 24 Bold/Regular for bold/light distinction
   if (PBL_IF_ROUND_ELSE(true, false)) {
-    return fonts_get_system_font(FONT_KEY_BITHAM_30_BLACK);
+    return fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD);
   }
   return fonts_get_system_font(FONT_KEY_BITHAM_42_BOLD);
 }
 
 static GFont prv_get_font_light(void) {
   if (PBL_IF_ROUND_ELSE(true, false)) {
-    return fonts_get_system_font(FONT_KEY_BITHAM_30_BLACK);
+    return fonts_get_system_font(FONT_KEY_GOTHIC_24);
   }
   return fonts_get_system_font(FONT_KEY_BITHAM_42_LIGHT);
 }
 
 static int prv_line_height(void) {
-  return PBL_IF_ROUND_ELSE(36, 50);
+  return PBL_IF_ROUND_ELSE(30, 50);
 }
 
 static GTextAlignment prv_galign(AlignOption a) {
@@ -699,14 +699,15 @@ static void prv_window_load(Window *window) {
   s_line3.nextLayer    = text_layer_create(GRect(s_screen_w, 0, s_screen_w, 60));
   s_line3.activeIndex  = 0;
 
-  // Use larger info fonts on big screens, smaller on narrow screens
-  GFont slot1_font = (s_screen_h > 168)
+  // Round and large rectangular screens get Gothic 18, small screens get Gothic 14
+  bool use_large_slot_font = (s_screen_h > 168) || PBL_IF_ROUND_ELSE(true, false);
+  GFont slot1_font = use_large_slot_font
     ? fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD)
     : fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD);
-  GFont slot2_font = (s_screen_h > 168)
+  GFont slot2_font = use_large_slot_font
     ? fonts_get_system_font(FONT_KEY_GOTHIC_18)
     : fonts_get_system_font(FONT_KEY_GOTHIC_14);
-  int slot_h = (s_screen_h > 168) ? 24 : 20;
+  int slot_h = use_large_slot_font ? 24 : 20;
 
   s_slot1_layer = text_layer_create(GRect(0, 0, s_screen_w, slot_h));
   text_layer_set_background_color(s_slot1_layer, GColorClear);

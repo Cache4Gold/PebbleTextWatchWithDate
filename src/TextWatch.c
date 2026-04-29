@@ -190,22 +190,29 @@ static void prv_load_settings(void) {
                            ? persist_read_int(PERSIST_KEY_HOUR_CASE) : CASE_LOWER;
   s_settings.min_case    = persist_exists(PERSIST_KEY_MIN_CASE)
                            ? persist_read_int(PERSIST_KEY_MIN_CASE) : CASE_LOWER;
+  // Round screens default to centered short day + day number
+  // Rectangular screens default to right-aligned long day + long US date
+  bool is_round = PBL_IF_ROUND_ELSE(true, false);
   s_settings.slot1_content = persist_exists(PERSIST_KEY_SLOT1_CONTENT)
-                           ? persist_read_int(PERSIST_KEY_SLOT1_CONTENT) : SLOT_DAY_LONG;
+                           ? persist_read_int(PERSIST_KEY_SLOT1_CONTENT)
+                           : (is_round ? SLOT_DAY_SHORT : SLOT_DAY_LONG);
   s_settings.slot1_color = persist_exists(PERSIST_KEY_SLOT1_COLOR)
                            ? (GColor){ .argb = persist_read_int(PERSIST_KEY_SLOT1_COLOR) }
                            : GColorWhite;
   s_settings.slot1_align = persist_exists(PERSIST_KEY_SLOT1_ALIGN)
-                           ? persist_read_int(PERSIST_KEY_SLOT1_ALIGN) : ALIGN_RIGHT;
+                           ? persist_read_int(PERSIST_KEY_SLOT1_ALIGN)
+                           : (is_round ? ALIGN_CENTER : ALIGN_RIGHT);
   s_settings.slot1_case  = persist_exists(PERSIST_KEY_SLOT1_CASE)
                            ? persist_read_int(PERSIST_KEY_SLOT1_CASE) : CASE_LOWER;
   s_settings.slot2_content = persist_exists(PERSIST_KEY_SLOT2_CONTENT)
-                           ? persist_read_int(PERSIST_KEY_SLOT2_CONTENT) : SLOT_DATE_LONG_US;
+                           ? persist_read_int(PERSIST_KEY_SLOT2_CONTENT)
+                           : (is_round ? SLOT_DATE_DAY_NUM : SLOT_DATE_LONG_US);
   s_settings.slot2_color = persist_exists(PERSIST_KEY_SLOT2_COLOR)
                            ? (GColor){ .argb = persist_read_int(PERSIST_KEY_SLOT2_COLOR) }
                            : GColorWhite;
   s_settings.slot2_align = persist_exists(PERSIST_KEY_SLOT2_ALIGN)
-                           ? persist_read_int(PERSIST_KEY_SLOT2_ALIGN) : ALIGN_RIGHT;
+                           ? persist_read_int(PERSIST_KEY_SLOT2_ALIGN)
+                           : (is_round ? ALIGN_CENTER : ALIGN_RIGHT);
   s_settings.slot2_case  = persist_exists(PERSIST_KEY_SLOT2_CASE)
                            ? persist_read_int(PERSIST_KEY_SLOT2_CASE) : CASE_LOWER;
   s_settings.weather_unit = persist_exists(PERSIST_KEY_WEATHER_UNIT)
@@ -549,7 +556,7 @@ static void prv_apply_settings(void) {
 
     int inset1 = 36, w1 = 180 - (inset1 * 2);  // line1 near top, narrow
     int inset2 = 14, w2 = 180 - (inset2 * 2);  // line2 near center, widest
-    int inset3 = 10, w3 = 180 - (inset3 * 2);  // line3 below center, wide
+    int inset3 = 16, w3 = 180 - (inset3 * 2);  // line3 below center
     int insetS1 = 24, wS1 = 180 - (insetS1 * 2);
     int insetS2 = 42, wS2 = 180 - (insetS2 * 2);
 

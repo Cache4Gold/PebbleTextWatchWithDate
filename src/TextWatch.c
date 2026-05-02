@@ -205,6 +205,7 @@ static void prv_load_settings(void) {
                            ? persist_read_int(PERSIST_KEY_MIN_CASE) : CASE_LOWER;
   // Round screens default to centered short day + day number
   // Rectangular screens default to right-aligned long day + long US date
+  // Use compile-time round check for defaults since screen size isn't known yet
   bool is_round = PBL_IF_ROUND_ELSE(true, false);
   s_settings.slot1_content = persist_exists(PERSIST_KEY_SLOT1_CONTENT)
                            ? persist_read_int(PERSIST_KEY_SLOT1_CONTENT)
@@ -262,24 +263,28 @@ static void prv_save_settings(void) {
 // -------------------------------------------------------------------------
 // Font helpers
 // -------------------------------------------------------------------------
+// True only for the original Pebble Time Round (180x180)
+// Round 2 and other round watches fall through to the standard layout
+static bool prv_is_time_round(void) {
+  return PBL_IF_ROUND_ELSE(s_screen_w == 180 && s_screen_h == 180, false);
+}
+
 static GFont prv_get_font_bold(void) {
-  // Round screens: Bitham 30 Black for hour
-  if (PBL_IF_ROUND_ELSE(true, false)) {
+  if (prv_is_time_round()) {
     return fonts_get_system_font(FONT_KEY_BITHAM_30_BLACK);
   }
   return fonts_get_system_font(FONT_KEY_BITHAM_42_BOLD);
 }
 
 static GFont prv_get_font_light(void) {
-  // Round screens: Gothic 28 Regular for minutes
-  if (PBL_IF_ROUND_ELSE(true, false)) {
+  if (prv_is_time_round()) {
     return fonts_get_system_font(FONT_KEY_GOTHIC_28);
   }
   return fonts_get_system_font(FONT_KEY_BITHAM_42_LIGHT);
 }
 
 static int prv_line_height(void) {
-  return PBL_IF_ROUND_ELSE(36, 50);
+  return prv_is_time_round() ? 36 : 50;
 }
 
 static GTextAlignment prv_galign(AlignOption a) {
@@ -403,7 +408,7 @@ static void prv_animation_stopped(struct Animation *animation, bool finished, vo
 
 static void prv_animate_line(Line *line, TextLayer *current, TextLayer *next) {
   // On round screens skip animation — just swap layers instantly
-  if (PBL_IF_ROUND_ELSE(true, false)) {
+  if (prv_is_time_round()) {
     // Snap next layer to x=0 within its frame (the inset is baked into the frame width/position)
     // We stored nextLayer at x=s_screen_w; move it back to the same x as currentLayer
     GRect cur_rect = layer_get_frame((Layer*)current);
@@ -482,7 +487,7 @@ static void prv_force_clear_line(Line *line, char lineStr[2][BUFFER_SIZE]) {
 static void prv_display_time(struct tm *t) {
   char l1[BUFFER_SIZE], l2[BUFFER_SIZE], l3[BUFFER_SIZE];
   time_to_3words(t->tm_hour, t->tm_min, l1, l2, l3, BUFFER_SIZE,
-                 s_settings.prefix, s_screen_w <= 144 && !PBL_IF_ROUND_ELSE(true, false));
+                 s_settings.prefix, s_screen_w <= 144 && !prv_is_time_round());
 
   apply_case(l1, s_settings.hour_case);
   apply_case(l2, s_settings.min_case);
@@ -508,7 +513,7 @@ static void prv_display_time(struct tm *t) {
 static void prv_display_initial_time(struct tm *t) {
   time_to_3words(t->tm_hour, t->tm_min,
                  s_line1Str[0], s_line2Str[0], s_line3Str[0],
-                 BUFFER_SIZE, s_settings.prefix, s_screen_w <= 144 && !PBL_IF_ROUND_ELSE(true, false));
+                 BUFFER_SIZE, s_settings.prefix, s_screen_w <= 144 && !prv_is_time_round());
 
   apply_case(s_line1Str[0], s_settings.hour_case);
   apply_case(s_line2Str[0], s_settings.min_case);
@@ -569,12 +574,12 @@ static void prv_apply_settings(void) {
 
   // Layout
   int lh = prv_line_height();
-  int inset = PBL_IF_ROUND_ELSE(14, 0);
+  int inset = prv_is_time_round() ? 14 : 0;
   int content_w = s_screen_w - (inset * 2);
 
   int y1, y2, y3, slot1_top, slot2_top;
 
-  if (PBL_IF_ROUND_ELSE(true, false)) {
+  if (prv_is_time_round()) {
     // Round screen (Time Round: 180x180)
     // Uniform inset for all lines, center alignment handles the circular edges visually
     y1 = 22; y2 = 58; y3 = 94;
@@ -738,7 +743,7 @@ static void prv_window_load(Window *window) {
   s_line3.activeIndex  = 0;
 
   // Round and large rectangular screens get Gothic 18, small screens get Gothic 14
-  bool use_large_slot_font = (s_screen_h > 168) || PBL_IF_ROUND_ELSE(true, false);
+  bool use_large_slot_font = (s_screen_h > 168) || prv_is_time_round();
   GFont slot1_font = use_large_slot_font
     ? fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD)
     : fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD);

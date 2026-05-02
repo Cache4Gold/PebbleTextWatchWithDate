@@ -403,11 +403,13 @@ static void prv_animation_stopped(struct Animation *animation, bool finished, vo
 
 static void prv_animate_line(Line *line, TextLayer *current, TextLayer *next) {
   // On round screens skip animation — per-line insets conflict with slide animation
-  // Just swap the layers in place instantly
+  // Instantly show next layer at its correct inset position, hide current
   if (PBL_IF_ROUND_ELSE(true, false)) {
+    // Move next layer to its display position (stored in frame but offset by s_screen_w)
     GRect next_rect = layer_get_frame((Layer*)next);
-    next_rect.origin.x = next_rect.origin.x - s_screen_w; // move to correct position
+    next_rect.origin.x = next_rect.origin.x - s_screen_w;
     layer_set_frame((Layer*)next, next_rect);
+    // Move old layer off screen
     GRect cur_rect = layer_get_frame((Layer*)current);
     cur_rect.origin.x = s_screen_w;
     layer_set_frame((Layer*)current, cur_rect);
@@ -530,7 +532,9 @@ static void prv_apply_settings(void) {
 
   GFont bold_font  = prv_get_font_bold();
   GFont light_font = prv_get_font_light();
-  GTextAlignment time_align = prv_galign(s_settings.time_align);
+  // On round screens, always center time text to account for varying line widths
+  GTextAlignment time_align = PBL_IF_ROUND_ELSE(GTextAlignmentCenter,
+                                                 prv_galign(s_settings.time_align));
 
   text_layer_set_font(s_line1.currentLayer, bold_font);
   text_layer_set_font(s_line1.nextLayer,    bold_font);
@@ -558,11 +562,13 @@ static void prv_apply_settings(void) {
   text_layer_set_text_alignment(s_line3.currentLayer, time_align);
   text_layer_set_text_alignment(s_line3.nextLayer,    time_align);
 
-  // Slot layers
+  // Slot layers — force center on round screens
   text_layer_set_text_color(s_slot1_layer, s_settings.slot1_color);
-  text_layer_set_text_alignment(s_slot1_layer, prv_galign(s_settings.slot1_align));
+  text_layer_set_text_alignment(s_slot1_layer,
+    PBL_IF_ROUND_ELSE(GTextAlignmentCenter, prv_galign(s_settings.slot1_align)));
   text_layer_set_text_color(s_slot2_layer, s_settings.slot2_color);
-  text_layer_set_text_alignment(s_slot2_layer, prv_galign(s_settings.slot2_align));
+  text_layer_set_text_alignment(s_slot2_layer,
+    PBL_IF_ROUND_ELSE(GTextAlignmentCenter, prv_galign(s_settings.slot2_align)));
 
   // Layout
   int lh = prv_line_height();

@@ -532,9 +532,7 @@ static void prv_apply_settings(void) {
 
   GFont bold_font  = prv_get_font_bold();
   GFont light_font = prv_get_font_light();
-  // On round screens, always center time text to account for varying line widths
-  GTextAlignment time_align = PBL_IF_ROUND_ELSE(GTextAlignmentCenter,
-                                                 prv_galign(s_settings.time_align));
+  GTextAlignment time_align = prv_galign(s_settings.time_align);
 
   text_layer_set_font(s_line1.currentLayer, bold_font);
   text_layer_set_font(s_line1.nextLayer,    bold_font);
@@ -562,13 +560,11 @@ static void prv_apply_settings(void) {
   text_layer_set_text_alignment(s_line3.currentLayer, time_align);
   text_layer_set_text_alignment(s_line3.nextLayer,    time_align);
 
-  // Slot layers — force center on round screens
+  // Slot layers
   text_layer_set_text_color(s_slot1_layer, s_settings.slot1_color);
-  text_layer_set_text_alignment(s_slot1_layer,
-    PBL_IF_ROUND_ELSE(GTextAlignmentCenter, prv_galign(s_settings.slot1_align)));
+  text_layer_set_text_alignment(s_slot1_layer, prv_galign(s_settings.slot1_align));
   text_layer_set_text_color(s_slot2_layer, s_settings.slot2_color);
-  text_layer_set_text_alignment(s_slot2_layer,
-    PBL_IF_ROUND_ELSE(GTextAlignmentCenter, prv_galign(s_settings.slot2_align)));
+  text_layer_set_text_alignment(s_slot2_layer, prv_galign(s_settings.slot2_align));
 
   // Layout
   int lh = prv_line_height();

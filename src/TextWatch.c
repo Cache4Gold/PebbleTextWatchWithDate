@@ -580,8 +580,8 @@ static void prv_apply_settings(void) {
     slot1_top = 128;
     slot2_top = 148;
 
-    int r_inset = 0;
-    int r_w = 180;
+    int r_inset = 14;
+    int r_w = 180 - (r_inset * 2);
 
     layer_set_frame((Layer*)s_line1.currentLayer, GRect(r_inset, y1, r_w, lh + 6));
     layer_set_frame((Layer*)s_line1.nextLayer,    GRect(s_screen_w, y1, r_w, lh + 6));

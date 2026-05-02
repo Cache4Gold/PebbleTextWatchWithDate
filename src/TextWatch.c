@@ -402,6 +402,18 @@ static void prv_animation_stopped(struct Animation *animation, bool finished, vo
 }
 
 static void prv_animate_line(Line *line, TextLayer *current, TextLayer *next) {
+  // On round screens skip animation — per-line insets conflict with slide animation
+  // Just swap the layers in place instantly
+  if (PBL_IF_ROUND_ELSE(true, false)) {
+    GRect next_rect = layer_get_frame((Layer*)next);
+    next_rect.origin.x = next_rect.origin.x - s_screen_w; // move to correct position
+    layer_set_frame((Layer*)next, next_rect);
+    GRect cur_rect = layer_get_frame((Layer*)current);
+    cur_rect.origin.x = s_screen_w;
+    layer_set_frame((Layer*)current, cur_rect);
+    return;
+  }
+
   GRect rect = layer_get_frame((Layer*)next);
   rect.origin.x -= s_screen_w;
 

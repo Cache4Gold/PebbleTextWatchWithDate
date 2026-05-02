@@ -402,15 +402,16 @@ static void prv_animation_stopped(struct Animation *animation, bool finished, vo
 }
 
 static void prv_animate_line(Line *line, TextLayer *current, TextLayer *next) {
-  // On round screens skip animation — per-line insets conflict with slide animation
-  // Instantly show next layer at its correct inset position, hide current
+  // On round screens skip animation — just swap layers instantly
   if (PBL_IF_ROUND_ELSE(true, false)) {
-    // Move next layer to its display position (stored in frame but offset by s_screen_w)
+    // Snap next layer to x=0 within its frame (the inset is baked into the frame width/position)
+    // We stored nextLayer at x=s_screen_w; move it back to the same x as currentLayer
+    GRect cur_rect = layer_get_frame((Layer*)current);
     GRect next_rect = layer_get_frame((Layer*)next);
-    next_rect.origin.x = next_rect.origin.x - s_screen_w;
+    // Place next at the same x position as current (the correct inset position)
+    next_rect.origin.x = cur_rect.origin.x;
     layer_set_frame((Layer*)next, next_rect);
     // Move old layer off screen
-    GRect cur_rect = layer_get_frame((Layer*)current);
     cur_rect.origin.x = s_screen_w;
     layer_set_frame((Layer*)current, cur_rect);
     return;
@@ -589,8 +590,11 @@ static void prv_apply_settings(void) {
     layer_set_frame((Layer*)s_line2.nextLayer,    GRect(s_screen_w, y2, r_w, lh + 6));
     layer_set_frame((Layer*)s_line3.currentLayer, GRect(r_inset, y3, r_w, lh + 6));
     layer_set_frame((Layer*)s_line3.nextLayer,    GRect(s_screen_w, y3, r_w, lh + 6));
-    layer_set_frame((Layer*)s_slot1_layer, GRect(r_inset, slot1_top, r_w, 20));
-    layer_set_frame((Layer*)s_slot2_layer, GRect(r_inset, slot2_top, r_w, 20));
+    // Slots are near the bottom of the circle where it curves in more
+    int rs_inset = 24;
+    int rs_w = 180 - (rs_inset * 2);
+    layer_set_frame((Layer*)s_slot1_layer, GRect(rs_inset, slot1_top, rs_w, 20));
+    layer_set_frame((Layer*)s_slot2_layer, GRect(rs_inset, slot2_top, rs_w, 20));
   } else {
     if (s_screen_h <= 168) {
       // Small rectangular screens: proven fixed positions from original watch

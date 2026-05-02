@@ -311,10 +311,10 @@ function saveAndClose() {
   config.prefix        = parseInt(document.getElementById('prefix').value);
   config.weather_unit  = parseInt(document.getElementById('weather-unit').value);
   config.slot1_content = parseInt(document.getElementById('slot1-content').value);
-  config.slot1_align   = parseInt(document.getElementById('slot1-align').value);
+  config.slot1_align   = isRound() ? 1 : parseInt(document.getElementById('slot1-align').value);
   config.slot1_case    = parseInt(document.getElementById('slot1-case').value);
   config.slot2_content = parseInt(document.getElementById('slot2-content').value);
-  config.slot2_align   = parseInt(document.getElementById('slot2-align').value);
+  config.slot2_align   = isRound() ? 1 : parseInt(document.getElementById('slot2-align').value);
   config.slot2_case    = parseInt(document.getElementById('slot2-case').value);
 
   const payload = {

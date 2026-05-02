@@ -585,7 +585,7 @@ static void prv_apply_settings(void) {
     int r_w = 180 - (r_inset * 2);
 
     // Hour line gets slightly more inset on left/right aligned to prevent clipping
-    int r_inset1 = (s_settings.time_align == ALIGN_CENTER) ? r_inset : r_inset + 6;
+    int r_inset1 = (s_settings.time_align == ALIGN_CENTER) ? r_inset : r_inset + 9;
     int r_w1 = 180 - (r_inset1 * 2);
     layer_set_frame((Layer*)s_line1.currentLayer, GRect(r_inset1, y1, r_w1, lh + 6));
     layer_set_frame((Layer*)s_line1.nextLayer,    GRect(s_screen_w, y1, r_w1, lh + 6));

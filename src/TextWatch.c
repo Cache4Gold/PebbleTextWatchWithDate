@@ -579,26 +579,22 @@ static void prv_apply_settings(void) {
 
   if (PBL_IF_ROUND_ELSE(true, false)) {
     // Round screen (Time Round: 180x180)
-    // Fixed positions with per-line insets calculated from circular geometry
-    // Insets vary per line based on distance from center (y=90)
-    y1 = 10; y2 = 46; y3 = 82;
+    // Uniform inset for all lines, center alignment handles the circular edges visually
+    y1 = 22; y2 = 58; y3 = 94;
     slot1_top = 128;
     slot2_top = 148;
 
-    int inset1 = 36, w1 = 180 - (inset1 * 2);  // line1 near top, narrow
-    int inset2 = 14, w2 = 180 - (inset2 * 2);  // line2 near center, widest
-    int inset3 = 12, w3 = 180 - (inset3 * 2);  // line3 below center
-    int insetS1 = 24, wS1 = 180 - (insetS1 * 2);
-    int insetS2 = 42, wS2 = 180 - (insetS2 * 2);
+    int r_inset = 0;
+    int r_w = 180;
 
-    layer_set_frame((Layer*)s_line1.currentLayer, GRect(inset1, y1, w1, lh + 6));
-    layer_set_frame((Layer*)s_line1.nextLayer,    GRect(s_screen_w, y1, w1, lh + 6));
-    layer_set_frame((Layer*)s_line2.currentLayer, GRect(inset2, y2, w2, lh + 6));
-    layer_set_frame((Layer*)s_line2.nextLayer,    GRect(s_screen_w, y2, w2, lh + 6));
-    layer_set_frame((Layer*)s_line3.currentLayer, GRect(inset3, y3, w3, lh + 6));
-    layer_set_frame((Layer*)s_line3.nextLayer,    GRect(s_screen_w, y3, w3, lh + 6));
-    layer_set_frame((Layer*)s_slot1_layer, GRect(insetS1, slot1_top, wS1, 20));
-    layer_set_frame((Layer*)s_slot2_layer, GRect(insetS2, slot2_top, wS2, 20));
+    layer_set_frame((Layer*)s_line1.currentLayer, GRect(r_inset, y1, r_w, lh + 6));
+    layer_set_frame((Layer*)s_line1.nextLayer,    GRect(s_screen_w, y1, r_w, lh + 6));
+    layer_set_frame((Layer*)s_line2.currentLayer, GRect(r_inset, y2, r_w, lh + 6));
+    layer_set_frame((Layer*)s_line2.nextLayer,    GRect(s_screen_w, y2, r_w, lh + 6));
+    layer_set_frame((Layer*)s_line3.currentLayer, GRect(r_inset, y3, r_w, lh + 6));
+    layer_set_frame((Layer*)s_line3.nextLayer,    GRect(s_screen_w, y3, r_w, lh + 6));
+    layer_set_frame((Layer*)s_slot1_layer, GRect(r_inset, slot1_top, r_w, 20));
+    layer_set_frame((Layer*)s_slot2_layer, GRect(r_inset, slot2_top, r_w, 20));
   } else {
     if (s_screen_h <= 168) {
       // Small rectangular screens: proven fixed positions from original watch

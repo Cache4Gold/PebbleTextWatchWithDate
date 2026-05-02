@@ -83,13 +83,13 @@
           <option value="2">Day — Short (mon)</option>
         </optgroup>
         <optgroup label="Date">
-          <option value="3">US Long (april 27th, 2026)</option>
+          <option id="slot1-opt-date-long-us" value="3">US Long (april 27th, 2026)</option>
           <option value="4">US Short (apr 27th)</option>
-          <option value="5">EU Long (27th april 2026)</option>
+          <option id="slot1-opt-date-long-eu" value="5">EU Long (27th april 2026)</option>
           <option value="6">EU Short (27th apr)</option>
-          <option value="7">Numeric M/D/Y</option>
-          <option value="8">Numeric D/M/Y</option>
-          <option value="9">Numeric Y/M/D</option>
+          <option id="slot1-opt-date-num-mdy" value="7">Numeric M/D/Y</option>
+          <option id="slot1-opt-date-num-dmy" value="8">Numeric D/M/Y</option>
+          <option id="slot1-opt-date-num-ymd" value="9">Numeric Y/M/D</option>
           <option value="10">Day number only (27)</option>
         </optgroup>
         <optgroup label="Weather">
@@ -101,7 +101,7 @@
       </select>
     </div>
     <div class="row"><label>Color</label><div class="color-wrap"><span class="color-label" id="slot1-hex">#FFFFFF</span><span class="color-swatch" id="slot1-swatch" onclick="openPicker('slot1')"></span></div></div>
-    <div class="row"><label>Alignment</label><select id="slot1-align"><option value="0">Left</option><option value="1">Center</option><option value="2" selected>Right</option></select></div>
+    <div class="row" id="slot1-align-row"><label>Alignment</label><select id="slot1-align"><option value="0">Left</option><option value="1">Center</option><option value="2" selected>Right</option></select></div>
     <div class="row"><label>Case</label><select id="slot1-case"><option value="0">lowercase</option><option value="1">UPPERCASE</option><option value="2">Proper Case</option></select></div>
   </div>
 </div>
@@ -119,13 +119,13 @@
           <option value="2">Day — Short (mon)</option>
         </optgroup>
         <optgroup label="Date">
-          <option value="3">US Long (april 27th, 2026)</option>
+          <option id="slot2-opt-date-long-us" value="3">US Long (april 27th, 2026)</option>
           <option value="4">US Short (apr 27th)</option>
-          <option value="5">EU Long (27th april 2026)</option>
+          <option id="slot2-opt-date-long-eu" value="5">EU Long (27th april 2026)</option>
           <option value="6">EU Short (27th apr)</option>
-          <option value="7">Numeric M/D/Y</option>
-          <option value="8">Numeric D/M/Y</option>
-          <option value="9">Numeric Y/M/D</option>
+          <option id="slot2-opt-date-num-mdy" value="7">Numeric M/D/Y</option>
+          <option id="slot2-opt-date-num-dmy" value="8">Numeric D/M/Y</option>
+          <option id="slot2-opt-date-num-ymd" value="9">Numeric Y/M/D</option>
           <option value="10">Day number only (27)</option>
         </optgroup>
         <optgroup label="Weather">
@@ -137,7 +137,7 @@
       </select>
     </div>
     <div class="row"><label>Color</label><div class="color-wrap"><span class="color-label" id="slot2-hex">#FFFFFF</span><span class="color-swatch" id="slot2-swatch" onclick="openPicker('slot2')"></span></div></div>
-    <div class="row"><label>Alignment</label><select id="slot2-align"><option value="0">Left</option><option value="1">Center</option><option value="2" selected>Right</option></select></div>
+    <div class="row" id="slot2-align-row"><label>Alignment</label><select id="slot2-align"><option value="0">Left</option><option value="1">Center</option><option value="2" selected>Right</option></select></div>
     <div class="row"><label>Case</label><select id="slot2-case"><option value="0">lowercase</option><option value="1">UPPERCASE</option><option value="2">Proper Case</option></select></div>
   </div>
 </div>
@@ -186,6 +186,7 @@ let config = {
   slot1_content:1, slot1_color:0xFF, slot1_align:2, slot1_case:0,
   slot2_content:3, slot2_color:0xFF, slot2_align:2, slot2_case:0,
   weather_unit:0,
+  platform: '',
 };
 
 let currentTarget = null;
@@ -194,7 +195,12 @@ function loadConfig() {
   try {
     const params = new URLSearchParams(location.search);
     const saved = params.get('config');
-    if (saved) Object.assign(config, JSON.parse(decodeURIComponent(saved)));
+    if (saved) {
+      const parsed = JSON.parse(decodeURIComponent(saved));
+      Object.assign(config, parsed);
+      // Platform is a string not an int, preserve it
+      if (parsed.platform) config.platform = parsed.platform;
+    }
   } catch(e) {}
 }
 
@@ -219,6 +225,27 @@ function updateSlotHint(slot) {
   document.getElementById('slot'+slot+'-hint').textContent = SLOT_HINTS[val] || '';
 }
 
+function isRound() {
+  return config.platform === 'chalk';
+}
+
+function applyPlatformUI() {
+  var round = isRound();
+
+  // Hide alignment rows for slots on round (always centered)
+  document.getElementById('slot1-align-row').style.display = round ? 'none' : '';
+  document.getElementById('slot2-align-row').style.display = round ? 'none' : '';
+
+  // Hide long date options on round
+  ['slot1','slot2'].forEach(function(slot) {
+    ['opt-date-long-us','opt-date-long-eu','opt-date-num-mdy',
+     'opt-date-num-dmy','opt-date-num-ymd'].forEach(function(opt) {
+      var el = document.getElementById(slot + '-' + opt);
+      if (el) el.style.display = round ? 'none' : '';
+    });
+  });
+}
+
 function initUI() {
   loadConfig();
   ['bg','hour','min','slot1','slot2'].forEach(id => updateSwatch(id, config[id+'_color'] || config[id.replace('slot','slot')+'_color']));
@@ -239,6 +266,7 @@ function initUI() {
   document.getElementById('slot2-case').value    = config.slot2_case;
   updateSlotHint(1);
   updateSlotHint(2);
+  applyPlatformUI();
 }
 
 function buildGrid(selectedArgb) {

@@ -79,6 +79,15 @@ Pebble.addEventListener('showConfiguration', function() {
     var val = localStorage.getItem(key);
     if (val !== null) currentConfig[key] = parseInt(val, 10);
   });
+
+  // Pass watch platform so config page can adapt its options
+  try {
+    var info = Pebble.getActiveWatchInfo();
+    if (info && info.platform) {
+      currentConfig.platform = info.platform; // 'aplite','basalt','chalk','diorite','emery'
+    }
+  } catch(e) {}
+
   Pebble.openURL(CONFIG_URL + '?config=' + encodeURIComponent(JSON.stringify(currentConfig)));
 });
 
